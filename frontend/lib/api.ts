@@ -79,6 +79,19 @@ export const cvApi = {
     });
   },
   getAnalysis: () => api.get("/api/cv/analysis"),
+  generate: (data: object) => api.post("/api/cv/generate", data),
+  rebuild: (targetRole: string, file?: File) => {
+    const form = new FormData();
+    form.append("target_role", targetRole);
+    if (file) form.append("file", file);
+    return api.post("/api/cv/rebuild", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  downloadPdf: (cv_text: string, full_name: string) =>
+    api.post("/api/cv/download-pdf", { cv_text, full_name }, { responseType: "blob" }),
+  downloadSavedPdf: () =>
+    api.get("/api/cv/download-saved-pdf", { responseType: "blob" }),
 };
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
@@ -97,7 +110,13 @@ export const internshipsApi = {
   get: (id: number) => api.get(`/api/internships/${id}`),
 };
 
-// ── Chatbot ───────────────────────────────────────────────────────────────────
+// ── Courses ───────────────────────────────────────────────────────────────────
+export const coursesApi = {
+  recommend: (career_goal: string, roadmap_id?: number, phase?: string) =>
+    api.post("/api/courses/recommend", { career_goal, roadmap_id, phase }),
+  forRoadmap: (roadmap_id: number) =>
+    api.get(`/api/courses/roadmap/${roadmap_id}`),
+};
 export const chatApi = {
   sendMessage: (message: string, history: { role: string; content: string }[]) =>
     api.post("/api/chat/message", { message, history }),

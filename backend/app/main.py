@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import create_tables
-from app.api import auth, cv, roadmap, internships, chatbot, profile
+from app.api import auth, cv, roadmap, internships, chatbot, profile, courses
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +46,7 @@ app.include_router(roadmap.router)
 app.include_router(internships.router)
 app.include_router(chatbot.router)
 app.include_router(profile.router)
+app.include_router(courses.router)
 
 
 @app.get("/", tags=["Health"])

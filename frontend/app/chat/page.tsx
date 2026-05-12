@@ -20,7 +20,7 @@ const SUGGESTIONS = [
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hi! I'm CareerCure AI, your personal career counselor. Ask me anything about careers, CVs, interviews, or skill development. How can I help you today?" },
+    { role: "assistant", content: "Hey! What do you need help with today?" },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,8 +55,8 @@ export default function ChatPage() {
     <ProtectedRoute>
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-col" style={{ height: "calc(100vh - 64px)" }}>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">AI Career Counselor</h1>
-        <p className="text-gray-500 text-sm mb-4">Powered by Groq LLaMA3 + RAG knowledge base</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Career Assistant</h1>
+        <p className="text-gray-500 text-sm mb-4">Ask anything about careers, CVs, or interviews</p>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
