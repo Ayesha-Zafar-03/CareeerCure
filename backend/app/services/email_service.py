@@ -1,5 +1,6 @@
 import smtplib
 import logging
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.core.config import settings
@@ -8,28 +9,33 @@ logger = logging.getLogger(__name__)
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Send an email via Gmail SMTP. Returns True on success."""
-    if not settings.GMAIL_USER or not settings.GMAIL_APP_PASSWORD:
-        logger.warning("Gmail credentials not configured — skipping email send")
-        return False
-
+    """Send an email via Gmail SMTP."""
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = f"CareerCure <{settings.GMAIL_USER}>"
-        msg["To"] = to_email
-
-        msg.attach(MIMEText(html_body, "html"))
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
-            server.sendmail(settings.GMAIL_USER, to_email, msg.as_string())
-
-        logger.info(f"Email sent to {to_email}: {subject}")
+        # Check if Gmail credentials are configured
+        if not settings.GMAIL_USER or not settings.GMAIL_APP_PASSWORD:
+            logger.warning("Gmail credentials not configured. Email not sent.")
+            return False
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = settings.GMAIL_USER
+        msg['To'] = to_email
+        
+        # Attach HTML content
+        html_part = MIMEText(html_body, 'html')
+        msg.attach(html_part)
+        
+        # Send via Gmail SMTP
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD.replace(' ', ''))
+            server.send_message(msg)
+        
+        logger.info(f"Email sent successfully to {to_email}")
         return True
-
+        
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {e}")
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
 
 

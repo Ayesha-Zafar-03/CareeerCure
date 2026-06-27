@@ -27,6 +27,9 @@ def list_internships(
             "duration": i.duration,
             "required_skills": i.required_skills,
             "description": i.description[:200] + "..." if len(i.description) > 200 else i.description,
+            "application_url": i.application_url,
+            "salary_range": i.salary_range,
+            "remote_option": i.remote_option,
         }
         for i in internships
     ]
@@ -63,4 +66,7 @@ def get_internship(internship_id: int, db: Session = Depends(get_db)):
         "duration": internship.duration,
         "required_skills": internship.required_skills,
         "description": internship.description,
+        "application_url": internship.application_url,
+        "salary_range": internship.salary_range,
+        "remote_option": internship.remote_option,
     }

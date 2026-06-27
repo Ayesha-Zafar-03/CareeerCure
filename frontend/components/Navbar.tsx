@@ -9,8 +9,10 @@ import clsx from "clsx";
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/cv", label: "CV Analysis" },
-  { href: "/internships", label: "Internships" },
+  { href: "/internships", label: "Jobs" },
+  { href: "/courses", label: "Courses" },
   { href: "/roadmap", label: "Roadmap" },
+  { href: "/chat", label: "Career Coach" },
 ];
 
 export default function Navbar() {

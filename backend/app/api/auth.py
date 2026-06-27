@@ -3,14 +3,20 @@ import string
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
+from app.core.config import settings
 from app.models.user import User
 from app.models.profile import Profile
 from app.models.otp import OTP
 from app.services.email_service import send_verification_email, send_password_reset_email
+from app.services.oauth_service import OAuthService
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -148,9 +154,10 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     sent = send_verification_email(req.email, req.full_name, code)
 
     return {
-        "message": "Account created. Please check your email for the 6-digit verification code.",
+        "message": f"Verification code: {code}",  # Show OTP directly
         "email": req.email,
         "email_sent": sent,
+        "otp": code  # Direct OTP for development
     }
 
 
@@ -245,8 +252,9 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     sent = send_password_reset_email(req.email, user.full_name, code)
 
     return {
-        "message": "Password reset code sent to your email.",
+        "message": f"Password reset code: {code}",  # Show OTP directly for development
         "email_sent": sent,
+        "otp": code  # Direct OTP for development
     }
 
 
@@ -289,6 +297,31 @@ def change_password(
     return {"message": "Password changed successfully"}
 
 
+# ── Test Email Endpoint (for debugging) ────────────────────────────────────────
+
+class TestEmailRequest(BaseModel):
+    email: EmailStr
+
+@router.post("/test-email")
+def test_email(req: TestEmailRequest, db: Session = Depends(get_db)):
+    """Test endpoint to debug email sending."""
+    from app.services.email_service import send_email
+    
+    test_html = """
+    <h1>Test Email</h1>
+    <p>This is a test email from CareerCure.</p>
+    <p>If you receive this, email service is working correctly.</p>
+    """
+    
+    result = send_email(req.email, "CareerCure Test Email", test_html)
+    
+    return {
+        "message": "Test email attempted",
+        "email_sent": result,
+        "recipient": req.email
+    }
+
+
 # ── Me ────────────────────────────────────────────────────────────────────────
 
 @router.get("/me")
@@ -298,4 +331,93 @@ def get_me(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "full_name": current_user.full_name,
         "is_active": current_user.is_active,
+    }
+
+
+# ── OAuth Authentication ──────────────────────────────────────────────────────
+
+@router.get("/google")
+async def google_auth():
+    """Redirect to Google OAuth"""
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=501, detail="Google OAuth not configured")
+    
+    auth_url = OAuthService.get_google_auth_url()
+    return RedirectResponse(url=auth_url)
+
+
+@router.get("/linkedin")  
+async def linkedin_auth():
+    """Redirect to LinkedIn OAuth"""
+    if not settings.LINKEDIN_CLIENT_ID:
+        raise HTTPException(status_code=501, detail="LinkedIn OAuth not configured")
+    
+    auth_url = OAuthService.get_linkedin_auth_url()
+    return RedirectResponse(url=auth_url)
+
+
+@router.get("/google/callback")
+async def google_callback(code: str, db: Session = Depends(get_db)):
+    """Handle Google OAuth callback"""
+    try:
+        # Exchange code for user info
+        user_data = await OAuthService.exchange_google_code(code)
+        if not user_data:
+            raise HTTPException(status_code=400, detail="Failed to authenticate with Google")
+        
+        # Create or get user
+        user = OAuthService.create_or_get_user(user_data, db)
+        if not user:
+            raise HTTPException(status_code=400, detail="Failed to create user account")
+        
+        # Generate JWT token
+        access_token = create_access_token(data={"sub": user.email})
+        
+        # Redirect to frontend with token
+        redirect_url = f"{settings.FRONTEND_URL}/auth/success?token={access_token}"
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        logger.error(f"Google OAuth callback error: {str(e)}")
+        error_url = f"{settings.FRONTEND_URL}/auth/error?message=Google authentication failed"
+        return RedirectResponse(url=error_url)
+
+
+@router.get("/linkedin/callback")
+async def linkedin_callback(code: str, db: Session = Depends(get_db)):
+    """Handle LinkedIn OAuth callback"""
+    try:
+        # Exchange code for user info
+        user_data = await OAuthService.exchange_linkedin_code(code)
+        if not user_data:
+            raise HTTPException(status_code=400, detail="Failed to authenticate with LinkedIn")
+        
+        # Create or get user
+        user = OAuthService.create_or_get_user(user_data, db)
+        if not user:
+            raise HTTPException(status_code=400, detail="Failed to create user account")
+        
+        # Generate JWT token
+        access_token = create_access_token(data={"sub": user.email})
+        
+        # Redirect to frontend with token
+        redirect_url = f"{settings.FRONTEND_URL}/auth/success?token={access_token}"
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        logger.error(f"LinkedIn OAuth callback error: {str(e)}")
+        error_url = f"{settings.FRONTEND_URL}/auth/error?message=LinkedIn authentication failed"
+        return RedirectResponse(url=error_url)
+
+
+# ── OAuth Status Endpoints ─────────────────────────────────────────────────────
+
+@router.get("/oauth/status")
+async def oauth_status():
+    """Check OAuth provider configuration status"""
+    return {
+        "google_configured": bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
+        "linkedin_configured": bool(settings.LINKEDIN_CLIENT_ID and settings.LINKEDIN_CLIENT_SECRET),
+        "oauth_available": bool((settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET) or 
+                               (settings.LINKEDIN_CLIENT_ID and settings.LINKEDIN_CLIENT_SECRET))
     }

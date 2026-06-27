@@ -78,7 +78,49 @@ export const cvApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+  
   getAnalysis: () => api.get("/api/cv/analysis"),
+  
+  generate: (data: {
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    target_role?: string;
+    experience_years?: string;
+    summary?: string;
+    education?: string;
+    work_experience?: string;
+    skills?: string;
+    projects?: string;
+    certifications?: string;
+    languages?: string;
+    achievements?: string;
+    use_ai_enhancement?: boolean;
+  }) => api.post("/api/cv/generate", data),
+  
+  rebuild: (target_role: string = "", file?: File) => {
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("target_role", target_role);
+      return api.post("/api/cv/rebuild", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } else {
+      return api.post("/api/cv/rebuild", { cv_text: "", target_role });
+    }
+  },
+  
+  downloadPdf: async () => {
+    const response = await api.get("/api/cv/download-pdf", {
+      responseType: "blob"
+    });
+    return response;
+  },
+  
+  preview: () => api.get("/api/cv/preview"),
 };
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
@@ -95,6 +137,25 @@ export const internshipsApi = {
     api.get(`/api/internships/list?skip=${skip}&limit=${limit}`),
   getMatches: () => api.get("/api/internships/matches"),
   get: (id: number) => api.get(`/api/internships/${id}`),
+};
+
+// ── Courses ───────────────────────────────────────────────────────────────────
+export const coursesApi = {
+  list: (skip = 0, limit = 20, category?: string, difficulty?: string, provider?: string, price_filter?: string) => {
+    const params = new URLSearchParams({
+      skip: skip.toString(),
+      limit: limit.toString(),
+    });
+    if (category) params.append("category", category);
+    if (difficulty) params.append("difficulty", difficulty);
+    if (provider) params.append("provider", provider);
+    if (price_filter) params.append("price_filter", price_filter);
+    return api.get(`/api/courses/list?${params}`);
+  },
+  getMatches: () => api.get("/api/courses/matches"),
+  get: (id: number) => api.get(`/api/courses/${id}`),
+  getCategories: () => api.get("/api/courses/categories"),
+  getProviders: () => api.get("/api/courses/providers"),
 };
 
 // ── Chatbot ───────────────────────────────────────────────────────────────────

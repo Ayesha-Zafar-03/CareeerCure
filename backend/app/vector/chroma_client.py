@@ -11,6 +11,7 @@ _client: Optional[chromadb.Client] = None
 # Collection names
 COLLECTION_CVS = "cvs"
 COLLECTION_JOBS = "internships"
+COLLECTION_COURSES = "courses"
 COLLECTION_FAQS = "career_faqs"
 
 
@@ -72,6 +73,43 @@ def search_similar_internships(cv_embedding: list, top_k: int = 5) -> list:
                 "internship_id": meta["internship_id"],
                 "score": round(1 - results["distances"][0][i], 4),  # cosine similarity
                 "snippet": results["documents"][0][i][:200],
+            }
+        )
+    return matches
+
+
+# ── Course helpers ────────────────────────────────────────────────────────────
+
+def upsert_course(course_id: int, description: str, embedding: list, skills_gained: list = None) -> None:
+    col = get_or_create_collection(COLLECTION_COURSES)
+    # Convert skills_gained list to comma-separated string for ChromaDB metadata
+    skills_str = ",".join(skills_gained) if skills_gained else ""
+    col.upsert(
+        ids=[str(course_id)],
+        embeddings=[embedding],
+        documents=[description],
+        metadatas=[{"course_id": course_id, "skills_gained": skills_str}],
+    )
+
+
+def search_similar_courses(cv_embedding: list, top_k: int = 5) -> list:
+    col = get_or_create_collection(COLLECTION_COURSES)
+    count = col.count()
+    if count == 0:
+        return []
+    results = col.query(
+        query_embeddings=[cv_embedding],
+        n_results=min(top_k, count),
+        include=["documents", "metadatas", "distances"],
+    )
+    matches = []
+    for i, meta in enumerate(results["metadatas"][0]):
+        matches.append(
+            {
+                "course_id": meta["course_id"],
+                "score": round(1 - results["distances"][0][i], 4),  # cosine similarity
+                "snippet": results["documents"][0][i][:200],
+                "skills_gained": meta.get("skills_gained", "").split(",") if meta.get("skills_gained") else [],
             }
         )
     return matches

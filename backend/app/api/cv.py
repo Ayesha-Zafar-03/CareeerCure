@@ -1,14 +1,43 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
+from io import BytesIO
+import json
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.profile import Profile
-from app.services.cv_service import process_cv
+from app.services.cv_service import process_cv, generate_cv_from_data, generate_cv_pdf, rebuild_cv_for_ats, extract_text_from_pdf
 
-router = APIRouter(prefix="/api/cv", tags=["CV Analysis"])
+router = APIRouter(prefix="/api/cv", tags=["CV Management"])
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+class CVGenerationRequest(BaseModel):
+    full_name: Optional[str] = ""
+    email: Optional[str] = ""
+    phone: Optional[str] = ""
+    location: Optional[str] = ""
+    linkedin: Optional[str] = ""
+    target_role: Optional[str] = ""
+    experience_years: Optional[str] = "0"
+    summary: Optional[str] = ""
+    education: Optional[str] = ""
+    work_experience: Optional[str] = ""
+    skills: Optional[str] = ""
+    projects: Optional[str] = ""
+    certifications: Optional[str] = ""
+    languages: Optional[str] = ""
+    achievements: Optional[str] = ""
+    use_ai_enhancement: Optional[bool] = False
+
+
+class CVRebuildRequest(BaseModel):
+    cv_text: str
+    target_role: Optional[str] = ""
 
 
 @router.post("/upload")
@@ -66,4 +95,155 @@ def get_last_analysis(
         "filename": profile.cv_filename,
         "analysis": profile.cv_analysis,
         "skills": profile.skills,
+    }
+
+
+@router.post("/generate")
+def generate_new_cv(
+    request: CVGenerationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a new CV from user input fields."""
+    try:
+        # Convert request to dict
+        cv_data = request.dict()
+        
+        # Add user info if not provided
+        if not cv_data.get('full_name'):
+            cv_data['full_name'] = current_user.full_name
+        if not cv_data.get('email'):
+            cv_data['email'] = current_user.email
+        
+        # Generate CV
+        result = generate_cv_from_data(cv_data)
+        
+        # Save to user profile
+        profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+        if profile:
+            profile.cv_text = result["cv_text"]
+            profile.cv_filename = f"{current_user.full_name.replace(' ', '_')}_CV_Generated.txt"
+            
+            # Update profile fields from generated CV
+            if cv_data.get('skills'):
+                profile.skills = [s.strip() for s in cv_data['skills'].split(',') if s.strip()]
+            if cv_data.get('target_role'):
+                profile.bio = result.get('summary', '')
+            
+            db.commit()
+        
+        return {
+            "message": "CV generated successfully",
+            "cv_text": result["cv_text"],
+            "ats_score": result["ats_score"],
+            "ats_tips": result["ats_tips"],
+            "keywords_used": result["keywords_used"],
+            "summary": result["summary"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CV generation failed: {str(e)}")
+
+
+@router.post("/rebuild")
+async def rebuild_existing_cv(
+    target_role: Optional[str] = "",
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Rebuild and optimize an existing CV for better ATS score."""
+    try:
+        cv_text = ""
+        
+        if file:
+            # Use uploaded file
+            if not file.filename.lower().endswith(".pdf"):
+                raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+            
+            pdf_bytes = await file.read()
+            if len(pdf_bytes) > MAX_FILE_SIZE:
+                raise HTTPException(status_code=400, detail="File size exceeds 5 MB limit")
+            
+            cv_text = extract_text_from_pdf(pdf_bytes)
+            
+            if not cv_text:
+                raise HTTPException(status_code=400, detail="Could not extract text from PDF")
+        else:
+            # Use saved CV
+            profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+            if not profile or not profile.cv_text:
+                raise HTTPException(status_code=404, detail="No saved CV found. Please upload a PDF or generate a CV first.")
+            cv_text = profile.cv_text
+        
+        # Rebuild the CV
+        result = rebuild_cv_for_ats(cv_text, target_role or "")
+        
+        # Save improved CV to profile
+        profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+        if profile:
+            profile.cv_text = result["improved_cv_text"]
+            profile.cv_filename = f"{current_user.full_name.replace(' ', '_')}_CV_Improved.txt"
+            db.commit()
+        
+        return {
+            "message": "CV rebuilt successfully",
+            "improved_cv_text": result["improved_cv_text"],
+            "original_ats_score": result["original_ats_score"],
+            "improved_ats_score": result["improved_ats_score"],
+            "changes_made": result["changes_made"],
+            "keywords_added": result["keywords_added"],
+            "formatting_fixes": result["formatting_fixes"],
+            "ats_tips": result["ats_tips"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CV rebuild failed: {str(e)}")
+
+
+@router.get("/download-pdf")
+def download_cv_as_pdf(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Download the user's CV as a professionally formatted PDF."""
+    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+    
+    if not profile or not profile.cv_text:
+        raise HTTPException(status_code=404, detail="No CV found. Please generate or upload a CV first.")
+    
+    try:
+        # Generate PDF
+        pdf_bytes = generate_cv_pdf(profile.cv_text, current_user.full_name)
+        
+        # Create filename
+        safe_name = current_user.full_name.replace(' ', '_').replace('.', '')
+        filename = f"{safe_name}_CV.pdf"
+        
+        # Return as downloadable file
+        return StreamingResponse(
+            BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+@router.get("/preview")
+def get_cv_preview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get the current CV text for preview."""
+    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+    
+    if not profile or not profile.cv_text:
+        raise HTTPException(status_code=404, detail="No CV found. Please generate or upload a CV first.")
+    
+    return {
+        "cv_text": profile.cv_text,
+        "filename": profile.cv_filename,
+        "last_updated": profile.updated_at.isoformat() if profile.updated_at else None
     }
