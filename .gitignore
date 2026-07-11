@@ -1,0 +1,11 @@
+.next/
+node_modules/
+venv/
+__pycache__/
+*.pyc
+.env
+*.tsbuildinfo
+.kiro
+chroma_data/
+.next/
+*.node

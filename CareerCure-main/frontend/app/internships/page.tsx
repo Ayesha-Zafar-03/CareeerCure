@@ -1,0 +1,249 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import ChatWidget from "@/components/ChatWidget";
+import JobCard from "@/components/jobs/JobCard";
+import { internshipsApi } from "@/lib/api";
+import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
+import { CompassIcon, BriefcaseIcon } from "lucide-react";
+import clsx from "clsx";
+
+type FilterType = "all" | "remote" | "entry-level" | "internship";
+type SortType = "match" | "company";
+
+const FILTERS: { id: FilterType; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "remote", label: "Remote" },
+  { id: "entry-level", label: "Entry-level" },
+  { id: "internship", label: "Internship" },
+];
+
+function normalizeJob(raw: Record<string, unknown>): MockJob {
+  return {
+    id: Number(raw.id),
+    title: String(raw.title ?? ""),
+    company: String(raw.company ?? ""),
+    description: String(raw.description ?? ""),
+    location: raw.location ? String(raw.location) : undefined,
+    duration: raw.duration ? String(raw.duration) : undefined,
+    salary_range: raw.salary_range ? String(raw.salary_range) : undefined,
+    remote_option: raw.remote_option ? String(raw.remote_option) : undefined,
+    job_type: raw.job_type ? String(raw.job_type) : undefined,
+    required_skills: Array.isArray(raw.required_skills)
+      ? raw.required_skills.map(String)
+      : undefined,
+    skills_have: Array.isArray(raw.skills_have)
+      ? raw.skills_have.map(String)
+      : undefined,
+    skills_missing: Array.isArray(raw.skills_missing)
+      ? raw.skills_missing.map(String)
+      : undefined,
+    application_url: raw.application_url ? String(raw.application_url) : undefined,
+    match_score:
+      typeof raw.match_score === "number" ? raw.match_score : undefined,
+  };
+}
+
+export default function InternshipsPage() {
+  const [jobs, setJobs] = useState<MockJob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [usingMock, setUsingMock] = useState(false);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [sortBy, setSortBy] = useState<SortType>("match");
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const listRes = await internshipsApi.list(0, 50);
+        let items = (listRes.data as Record<string, unknown>[]).map(normalizeJob);
+
+        try {
+          const matchRes = await internshipsApi.getMatches();
+          const matches = (matchRes.data.matches as Record<string, unknown>[]).map(
+            (m) => normalizeJob(m)
+          );
+          const matchMap = new Map(matches.map((m) => [m.id, m.match_score]));
+          items = items.map((j) => ({
+            ...j,
+            match_score: matchMap.get(j.id) ?? j.match_score,
+            ...matches.find((m) => m.id === j.id),
+          }));
+        } catch {
+          // matches optional
+        }
+
+        if (items.length === 0) {
+          setJobs(MOCK_JOBS);
+          setUsingMock(true);
+        } else {
+          setJobs(items);
+        }
+      } catch {
+        setJobs(MOCK_JOBS);
+        setUsingMock(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filteredJobs = useMemo(() => {
+    let result = [...jobs];
+
+    if (filter === "remote") {
+      result = result.filter(
+        (j) => j.remote_option?.toLowerCase() === "remote"
+      );
+    } else if (filter === "entry-level") {
+      result = result.filter(
+        (j) =>
+          j.job_type?.toLowerCase() === "entry-level" ||
+          j.title.toLowerCase().includes("junior") ||
+          j.title.toLowerCase().includes("entry")
+      );
+    } else if (filter === "internship") {
+      result = result.filter(
+        (j) =>
+          j.job_type?.toLowerCase() === "internship" ||
+          j.title.toLowerCase().includes("intern")
+      );
+    }
+
+    if (sortBy === "match") {
+      result.sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
+    } else {
+      result.sort((a, b) => a.company.localeCompare(b.company));
+    }
+
+    return result;
+  }, [jobs, filter, sortBy]);
+
+  const toggleSave = (id: number) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <ProtectedRoute>
+      <Navbar />
+      <div className="min-h-screen bg-paper">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
+
+          <div className="relative mb-10 border-b border-line pb-8 overflow-hidden">
+            <svg
+              className="pointer-events-none absolute -right-10 -top-16 w-[420px] h-[280px] opacity-[0.06]"
+              viewBox="0 0 420 280"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#659287" strokeWidth="1.5" />
+            </svg>
+
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <CompassIcon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-primary">
+                  Matches &middot; {filteredJobs.length} opportunities found
+                </p>
+              </div>
+              <h1 className="font-serif font-medium text-5xl sm:text-6xl text-primary tracking-tight mb-3">
+                Jobs for you
+              </h1>
+              <p className="text-primary/60 max-w-md text-[15px] font-light leading-relaxed">
+                Personalized opportunities matched to your skills and career goals.
+              </p>
+              {usingMock && (
+                <p className="font-mono text-[11px] tracking-wide text-primary mt-4 border border-line px-3 py-1.5 inline-block transition-colors hover:border-primary/50">
+                  Sample data — connect backend for live listings
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-10 bg-surface border border-line px-5 sm:px-6 py-5 transition-shadow hover:shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5">
+              <div>
+                <label className="block font-mono text-[10px] tracking-[0.16em] uppercase text-primary/45 mb-2">
+                  Show
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setFilter(f.id)}
+                      className={clsx(
+                        "font-mono text-[11px] tracking-[0.08em] uppercase px-3.5 py-1.5 border transition-all duration-200",
+                        filter === f.id
+                          ? "bg-primary border-primary text-white"
+                          : "bg-transparent border-line text-primary/60 hover:border-primary/50 hover:text-primary"
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="group">
+                <label className="block font-mono text-[10px] tracking-[0.16em] uppercase text-primary/45 mb-1.5 transition-colors group-focus-within:text-primary">
+                  Sort by
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortType)}
+                  className="bg-transparent text-sm text-primary border-b border-primary/20 pb-1 pr-6 focus:outline-none focus:border-primary cursor-pointer transition-colors hover:border-primary/60"
+                >
+                  <option value="match">Best match</option>
+                  <option value="company">Company, A–Z</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto" />
+              <p className="font-mono text-xs tracking-[0.14em] uppercase text-primary/50 mt-4">
+                Scouting opportunities…
+              </p>
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="text-center py-20 border border-dashed border-line">
+              <BriefcaseIcon className="w-9 h-9 text-primary/25 mx-auto mb-4" />
+              <p className="text-primary/60 mb-1 font-light">No jobs match these filters.</p>
+              <p className="font-mono text-xs tracking-wide text-primary/40">Try a broader filter.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredJobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="transition-transform duration-200 hover:-translate-y-1"
+                >
+                  <JobCard
+                    job={job}
+                    saved={savedIds.has(job.id)}
+                    onSave={toggleSave}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <ChatWidget />
+    </ProtectedRoute>
+  );
+}
