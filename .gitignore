@@ -1,13 +1,23 @@
-.next/
-node_modules/
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.so
+venv/
+env/
 .env
-*.tsbuildinfo
-.kiro
-chroma_data/
-.next/
-*.node
+*.egg-info/
 
-CareerCure-admin/.env.local
+# Node
+node_modules/
+.next/
+.env.local
+
+# ChromaDB (ephemeral data, not committed)
+chroma_data/
+
+# IDE
+.vscode/
+.idea/
+*.tsbuildinfo
+*.kiro
+*.node
