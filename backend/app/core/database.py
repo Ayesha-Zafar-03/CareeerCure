@@ -31,3 +31,10 @@ def create_tables():
     """Create all tables in the database. Raises on failure so a broken DB is not hidden."""
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created successfully")
+
+def init_db_pool():
+    """Eagerly initialize the connection pool to avoid slow first request."""
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    logger.info("Database connection pool initialized")

@@ -73,6 +73,9 @@ const config: Config = {
         "accent-d": "#cda434",
         success: "#16a34a",
         danger: "#dc2626",
+        slate: {
+          850: "#1a2332",
+        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

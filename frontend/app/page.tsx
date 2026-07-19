@@ -77,14 +77,14 @@ export default function LandingPage() {
             <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
           </div>
            <div className="flex items-center gap-3">
-            <Link 
+            <a
               href="/login" 
               className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
             >
               Login
-            </Link>
+            </a>
             <a
-              href={process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login"}
+              href="/admin/login"
               className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
             >
               Login as Admin
@@ -146,7 +146,7 @@ export default function LandingPage() {
             Sign In
           </Link>
           <a
-            href={process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login"}
+            href="/admin/login"
             className="flex items-center gap-2 text-sm text-ink/50 hover:text-primary font-medium transition-colors duration-200 underline-offset-4 hover:underline"
           >
             Are you an admin? Login here

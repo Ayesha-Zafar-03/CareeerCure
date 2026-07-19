@@ -7,7 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import settings
-from app.core.database import create_tables
+from app.core.database import create_tables, init_db_pool
 from app.core.rate_limit import limiter
 from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan
 
@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
     logger.info("Starting CareerCure API...")
     create_tables()
+    init_db_pool()
     logger.info("Database tables ready")
     yield
     logger.info("Shutting down CareerCure API")

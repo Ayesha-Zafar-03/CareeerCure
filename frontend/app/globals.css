@@ -68,6 +68,18 @@
   .chat-content a.chat-link {
     @apply text-primary underline underline-offset-2 hover:text-primary-d transition-colors;
   }
+  .table-row {
+    @apply border-b border-cream-100 hover:bg-cream-50/50 transition-colors;
+  }
+  .btn-gold {
+    @apply bg-gold hover:bg-gold-light text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
+  }
+  .btn-ghost {
+    @apply hover:bg-cream-100 text-navy/60 hover:text-navy font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
+  }
 }
 
 @layer utilities {
