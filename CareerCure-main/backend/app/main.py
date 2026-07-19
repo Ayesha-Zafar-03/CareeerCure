@@ -1,10 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from app.core.config import settings
 from app.core.database import create_tables
-from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin
+from app.core.rate_limit import limiter
+from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,6 +35,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # CORS — allow configured origins plus any local dev port (e.g. Next.js on 3002)
 app.add_middleware(
     CORSMiddleware,
@@ -49,6 +59,17 @@ app.include_router(courses.router)
 app.include_router(chatbot.router)
 app.include_router(profile.router)
 app.include_router(admin.router)
+app.include_router(plan.router)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Log full error server-side, return a generic message to the client."""
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred. Please try again later."},
+    )
 
 
 @app.get("/", tags=["Health"])

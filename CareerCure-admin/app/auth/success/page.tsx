@@ -1,29 +1,28 @@
 "use client";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 
-export default function AuthSuccessPage() {
+function AuthSuccessInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setUser, setToken } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');
-    
+
     if (token) {
-      localStorage.setItem('token', token);
-      
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const user = {
-          email: payload.sub,
+          id: payload.user_id ?? payload.id ?? 0,
+          email: payload.sub ?? payload.email ?? '',
+          full_name: payload.full_name ?? payload.name ?? '',
+          is_admin: payload.is_admin ?? false,
         };
-        
-        setToken(token);
-        setUser(user);
-        
-        router.push('/dashboard');
+
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+
+        window.location.href = '/admin';
       } catch (error) {
         console.error('Error processing token:', error);
         router.push('/login?error=Invalid token');
@@ -31,7 +30,7 @@ export default function AuthSuccessPage() {
     } else {
       router.push('/login?error=No token received');
     }
-  }, [searchParams, router, setUser, setToken]);
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-paper via-blue-50 to-indigo-100 flex items-center justify-center px-4">
@@ -46,5 +45,17 @@ export default function AuthSuccessPage() {
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
     </div>
+  );
+}
+
+export default function AuthSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-paper via-blue-50 to-indigo-100 flex items-center justify-center px-4">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <AuthSuccessInner />
+    </Suspense>
   );
 }

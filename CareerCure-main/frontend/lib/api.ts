@@ -10,8 +10,6 @@ const api = axios.create({
 
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
-  console.log('Making API request to:', (config.baseURL || '') + (config.url || ''));
-  
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) {
@@ -19,28 +17,21 @@ api.interceptors.request.use((config) => {
     }
   }
   return config;
-}, (error) => {
-  console.error('Request setup error:', error);
-  return Promise.reject(error);
 });
 
-// Handle 401 — redirect to login
+// Handle 401 — redirect to login (avoid redirect loops on auth endpoints)
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    console.error('API Error:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-      timeout: error.config?.timeout,
-    });
-    
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+    const status = error.response?.status;
+    const url: string = error.config?.url || "";
+    const isAuthEndpoint = url.includes("/api/auth/");
+    if (status === 401 && typeof window !== "undefined" && !isAuthEndpoint) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
@@ -66,6 +57,9 @@ export const authApi = {
     });
   },
 
+  verifyAdminLogin: (email: string, otp: string) =>
+    api.post("/api/auth/login/verify-otp", { email, otp }),
+
   refresh: () => api.post("/api/auth/refresh"),
 
   forgotPassword: (email: string) =>
@@ -76,6 +70,9 @@ export const authApi = {
 
   changePassword: (current_password: string, new_password: string) =>
     api.post("/api/auth/change-password", { current_password, new_password }),
+
+  getMe: () =>
+    api.get<{ id: number; email: string; full_name: string; is_active: boolean; is_admin: boolean }>("/api/auth/me"),
 
   getOAuthStatus: () =>
     api.get<{
@@ -181,8 +178,33 @@ export const coursesApi = {
 
 // ── Chatbot ───────────────────────────────────────────────────────────────────
 export const chatApi = {
-  sendMessage: (message: string, history: { role: string; content: string }[]) =>
-    api.post("/api/chat/message", { message, history }),
+  sendMessage: (message: string, history: { role: string; content: string }[], conversationId?: string) =>
+    api.post("/api/chat/message", { message, history, conversation_id: conversationId }),
+};
+
+// ── Chat history (persisted) ──────────────────────────────────────────────────
+export const chatHistoryApi = {
+  get: (conversationId: string = "default") =>
+    api.get("/api/chat/history", { params: { conversation_id: conversationId } }),
+  clear: (conversationId?: string) =>
+    api.delete("/api/chat/history", { params: conversationId ? { conversation_id: conversationId } : {} }),
+  listConversations: () => api.get("/api/chat/conversations"),
+};
+
+// ── Planned courses (persisted) ───────────────────────────────────────────────
+export const planApi = {
+  list: () => api.get("/api/plan/list"),
+  add: (course: {
+    id: number;
+    title: string;
+    provider?: string;
+    course_url?: string;
+    duration?: string;
+    difficulty_level?: string;
+    description?: string;
+    roadmap?: string;
+  }) => api.post("/api/plan/add", course),
+  remove: (courseId: number) => api.delete(`/api/plan/remove/${courseId}`),
 };
 
 export default api;

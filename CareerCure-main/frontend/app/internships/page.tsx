@@ -10,11 +10,12 @@ import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
 import { CompassIcon, BriefcaseIcon } from "lucide-react";
 import clsx from "clsx";
 
-type FilterType = "all" | "remote" | "entry-level" | "internship";
+type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship";
 type SortType = "match" | "company";
 
 const FILTERS: { id: FilterType; label: string }[] = [
   { id: "all", label: "All" },
+  { id: "pakistan", label: "Pakistan" },
   { id: "remote", label: "Remote" },
   { id: "entry-level", label: "Entry-level" },
   { id: "internship", label: "Internship" },
@@ -50,6 +51,7 @@ export default function InternshipsPage() {
   const [jobs, setJobs] = useState<MockJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingMock, setUsingMock] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("match");
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
@@ -82,8 +84,7 @@ export default function InternshipsPage() {
           setJobs(items);
         }
       } catch {
-        setJobs(MOCK_JOBS);
-        setUsingMock(true);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -94,7 +95,11 @@ export default function InternshipsPage() {
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
 
-    if (filter === "remote") {
+    if (filter === "pakistan") {
+      result = result.filter((j) =>
+        j.location?.toLowerCase().includes("pakistan")
+      );
+    } else if (filter === "remote") {
       result = result.filter(
         (j) => j.remote_option?.toLowerCase() === "remote"
       );
@@ -144,10 +149,10 @@ export default function InternshipsPage() {
               fill="none"
               aria-hidden="true"
             >
-              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#b2892e" strokeWidth="1.5" />
             </svg>
 
             <div className="relative">
@@ -218,6 +223,21 @@ export default function InternshipsPage() {
               <p className="font-mono text-xs tracking-[0.14em] uppercase text-primary/50 mt-4">
                 Scouting opportunities…
               </p>
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-20 border border-dashed border-line">
+              <BriefcaseIcon className="w-9 h-9 text-primary/25 mx-auto mb-4" />
+              <p className="text-primary/70 mb-2 font-light">Couldn&apos;t load jobs.</p>
+              <p className="font-mono text-xs tracking-wide text-primary/40 mb-5">
+                The server may be unavailable. Please try again.
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="font-mono text-[11px] tracking-[0.1em] uppercase px-4 py-2 border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : filteredJobs.length === 0 ? (
             <div className="text-center py-20 border border-dashed border-line">

@@ -2,8 +2,7 @@
 External data service for fetching real jobs and courses from APIs
 """
 import logging
-import requests
-import asyncio
+import httpx
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from app.core.config import settings
@@ -47,19 +46,29 @@ class ExternalDataService:
         }
         
         try:
-            response = requests.get(url, headers=headers, params=querystring, timeout=10)
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url, headers=headers, params=querystring)
             response.raise_for_status()
             data = response.json()
             
             jobs = []
             for job_data in data.get('data', [])[:limit]:
+                min_sal = job_data.get('job_min_salary')
+                max_sal = job_data.get('job_max_salary')
+                currency = job_data.get('job_salary_currency', '') or ''
+                if min_sal and max_sal:
+                    salary_range = f"{currency} {min_sal}-{max_sal}".strip()
+                elif min_sal or max_sal:
+                    salary_range = f"{currency} {min_sal or max_sal}".strip()
+                else:
+                    salary_range = ''
                 job = {
                     'title': job_data.get('job_title', ''),
                     'company': job_data.get('employer_name', ''),
                     'location': job_data.get('job_city', '') + ', ' + job_data.get('job_country', ''),
                     'description': job_data.get('job_description', '')[:500],
                     'application_url': job_data.get('job_apply_link', ''),
-                    'salary_range': job_data.get('job_salary_currency', '') + ' ' + str(job_data.get('job_min_salary', '') or '') + '-' + str(job_data.get('job_max_salary', '') or ''),
+                    'salary_range': salary_range,
                     'remote_option': 'Remote' if job_data.get('job_is_remote') else 'On-site',
                     'required_skills': job_data.get('job_required_skills', []) or [],
                     'source': 'jsearch'
@@ -92,7 +101,8 @@ class ExternalDataService:
         }
         
         try:
-            response = requests.get(url, params=params, timeout=10)
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -118,7 +128,7 @@ class ExternalDataService:
             logger.error(f"Error fetching jobs from Adzuna: {e}")
             return []
     
-    async def fetch_jobs_from_linkedin(self, title: str = "Software Developer", location: str = "United States", limit: int = 25) -> List[Dict]:
+    async def fetch_jobs_from_linkedin(self, title: str = "Software Developer", location: str = "Pakistan", limit: int = 25) -> List[Dict]:
         """
         Fetch jobs from LinkedIn Jobs API (RapidAPI)
         Uses linkedin-job-search-api.p.rapidapi.com
@@ -127,55 +137,42 @@ class ExternalDataService:
         if not api_key:
             logger.warning("LinkedIn Jobs API key not configured")
             return []
-            
-        # Use the active job count endpoint first to test connectivity
-        url = "https://linkedin-job-search-api.p.rapidapi.com/active-jb-count"
+
+        url = "https://linkedin-job-search-api.p.rapidapi.com/active-jb-24h"
         querystring = {
-            "time_frame": "24h",
-            "title": title,
-            "location": f'"{location}"'
+            "title_filter": title,
+            "location_filter": location,
         }
-        
+
         headers = {
             "X-RapidAPI-Key": api_key,
             "X-RapidAPI-Host": "linkedin-job-search-api.p.rapidapi.com",
-            "Content-Type": "application/json"
         }
-        
+
         try:
-            response = requests.get(url, headers=headers, params=querystring, timeout=15)
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url, headers=headers, params=querystring)
             response.raise_for_status()
-            
-            # For now, return mock LinkedIn-style jobs since the exact API structure may vary
-            logger.info(f"LinkedIn API responded successfully")
-            
-            mock_linkedin_jobs = [
-                {
-                    'title': 'Senior Software Engineer',
-                    'company': 'Microsoft',
-                    'location': 'Redmond, WA',
-                    'description': 'Build cloud-native applications using Azure and .NET technologies. Work in a collaborative environment.',
-                    'application_url': 'https://careers.microsoft.com/',
-                    'salary_range': '$130,000-170,000/year',
-                    'remote_option': 'Hybrid',
-                    'required_skills': ['C#', '.NET', 'Azure', 'Kubernetes'],
-                    'source': 'linkedin'
-                },
-                {
-                    'title': 'Frontend Developer',
-                    'company': 'Meta',
-                    'location': 'Menlo Park, CA',
-                    'description': 'Create engaging user experiences for billions of users worldwide using React and GraphQL.',
-                    'application_url': 'https://www.metacareers.com/',
-                    'salary_range': '$140,000-180,000/year',
-                    'remote_option': 'On-site',
-                    'required_skills': ['React', 'JavaScript', 'GraphQL', 'CSS'],
-                    'source': 'linkedin'
-                }
-            ]
-            
-            return mock_linkedin_jobs[:limit]
-            
+            data = response.json()
+
+            records = data if isinstance(data, list) else data.get("data", [])
+            jobs = []
+            for job_data in records[:limit]:
+                jobs.append({
+                    'title': job_data.get('title', ''),
+                    'company': job_data.get('organization', '') or job_data.get('company', ''),
+                    'location': job_data.get('locations_derived', [''])[0] if job_data.get('locations_derived') else job_data.get('location', ''),
+                    'description': (job_data.get('description', '') or '')[:500],
+                    'application_url': job_data.get('url', '') or job_data.get('apply_url', ''),
+                    'salary_range': '',
+                    'remote_option': 'Remote' if job_data.get('remote_derived') else 'On-site',
+                    'required_skills': [],
+                    'source': 'linkedin',
+                })
+
+            logger.info(f"Fetched {len(jobs)} jobs from LinkedIn API")
+            return jobs
+
         except Exception as e:
             logger.error(f"Error fetching jobs from LinkedIn: {e}")
             return []
@@ -213,7 +210,8 @@ class ExternalDataService:
         }
         
         try:
-            response = requests.get(url, headers=headers, params=querystring, timeout=15)
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(url, headers=headers, params=querystring)
             response.raise_for_status()
             data = response.json()
             
@@ -257,11 +255,11 @@ class ExternalDataService:
     
     async def fetch_courses_from_udemy(self, query: str = "programming", limit: int = 25) -> List[Dict]:
         """
-        Fetch courses from Udemy API (requires approval)
-        Alternative: scrape public course data
+        Return a curated set of popular courses.
+
+        Udemy's public API requires partner approval, so this returns a hand-picked
+        list rather than live API data. Swap in a real API call when credentials exist.
         """
-        # For now, return curated course data
-        # In production, you'd use Udemy API or scraping
         courses = [
             {
                 'title': 'Complete Python Bootcamp From Zero to Hero',
@@ -338,12 +336,11 @@ class ExternalDataService:
         logger.info(f"Returning {len(courses[:limit])} curated courses")
         return courses[:limit]
     
-    def sync_jobs_to_database(self, jobs: List[Dict], db: Session) -> int:
-        """Sync fetched jobs to database"""
-        added_count = 0
+    def sync_jobs_to_database(self, jobs: List[Dict], db: Session) -> List[Internship]:
+        """Sync fetched jobs to database. Returns list of newly added Internship objects."""
+        added = []
         
         for job_data in jobs:
-            # Check if job already exists (by title and company)
             existing = db.query(Internship).filter(
                 Internship.title == job_data['title'],
                 Internship.company == job_data['company']
@@ -353,26 +350,30 @@ class ExternalDataService:
                 internship = Internship(
                     title=job_data['title'],
                     company=job_data['company'],
-                    location=job_data['location'],
-                    description=job_data['description'],
-                    application_url=job_data['application_url'],
-                    salary_range=job_data['salary_range'],
-                    remote_option=job_data['remote_option'],
-                    required_skills=job_data['required_skills']
+                    location=job_data.get('location', ''),
+                    description=job_data.get('description', ''),
+                    application_url=job_data.get('application_url', ''),
+                    salary_range=job_data.get('salary_range', ''),
+                    remote_option=job_data.get('remote_option', 'On-site'),
+                    required_skills=job_data.get('required_skills', []),
+                    duration=job_data.get('duration', ''),
                 )
                 db.add(internship)
-                added_count += 1
+                added.append(internship)
         
         db.commit()
-        logger.info(f"Added {added_count} new jobs to database")
-        return added_count
+        # Refresh to get IDs
+        for item in added:
+            db.refresh(item)
+        
+        logger.info(f"Added {len(added)} new jobs to database")
+        return added
     
-    def sync_courses_to_database(self, courses: List[Dict], db: Session) -> int:
-        """Sync fetched courses to database"""
-        added_count = 0
+    def sync_courses_to_database(self, courses: List[Dict], db: Session) -> List[Course]:
+        """Sync fetched courses to database. Returns list of newly added Course objects."""
+        added = []
         
         for course_data in courses:
-            # Check if course already exists
             existing = db.query(Course).filter(
                 Course.title == course_data['title'],
                 Course.provider == course_data['provider']
@@ -383,27 +384,36 @@ class ExternalDataService:
                     title=course_data['title'],
                     provider=course_data['provider'],
                     instructor=course_data.get('instructor'),
-                    description=course_data['description'],
-                    duration=course_data['duration'],
-                    difficulty_level=course_data['difficulty_level'],
-                    price=course_data['price'],
-                    course_url=course_data['course_url'],
+                    description=course_data.get('description', ''),
+                    duration=course_data.get('duration', ''),
+                    difficulty_level=course_data.get('difficulty_level', ''),
+                    price=course_data.get('price', ''),
+                    course_url=course_data.get('course_url', ''),
                     rating=course_data.get('rating'),
-                    category=course_data.get('category'),
-                    skills_gained=course_data['skills_gained']
+                    category=course_data.get('category', ''),
+                    skills_gained=course_data.get('skills_gained', []),
                 )
                 db.add(course)
-                added_count += 1
+                added.append(course)
         
         db.commit()
-        logger.info(f"Added {added_count} new courses to database")
-        return added_count
+        for item in added:
+            db.refresh(item)
+        
+        logger.info(f"Added {len(added)} new courses to database")
+        return added
     
-    async def update_all_data(self, db: Session) -> Dict[str, int]:
-        """Update both jobs and courses from all sources"""
+    async def update_all_data(self, db: Session) -> Dict:
+        """Update both jobs and courses from all sources.
+        
+        Returns dict with keys: jobs_added (count), courses_added (count),
+        new_jobs (list[Internship]), new_courses (list[Course]), errors.
+        """
         results = {
             'jobs_added': 0,
             'courses_added': 0,
+            'new_jobs': [],
+            'new_courses': [],
             'errors': []
         }
         
@@ -411,30 +421,28 @@ class ExternalDataService:
             # Fetch jobs from multiple sources
             all_jobs = []
             
-            # LinkedIn Jobs API
-            linkedin_jobs = await self.fetch_jobs_from_linkedin("Software Developer", "United States", 15)
+            linkedin_jobs = await self.fetch_jobs_from_linkedin("Software Developer", "Pakistan", 15)
             all_jobs.extend(linkedin_jobs)
             
-            # Indeed Jobs API  
             indeed_jobs = await self.fetch_jobs_from_indeed(None, "us", 15)
             all_jobs.extend(indeed_jobs)
             
-            # JSearch API (if configured)
             if self.jsearch_api_key:
                 jsearch_jobs = await self.fetch_jobs_from_jsearch("software developer", 10)
                 all_jobs.extend(jsearch_jobs)
             
-            # Adzuna API (if configured)
             if self.adzuna_api_id and self.adzuna_api_key:
                 adzuna_jobs = await self.fetch_jobs_from_adzuna("developer", 10)
                 all_jobs.extend(adzuna_jobs)
             
-            # Sync jobs to database
-            results['jobs_added'] = self.sync_jobs_to_database(all_jobs, db)
+            new_jobs = self.sync_jobs_to_database(all_jobs, db)
+            results['jobs_added'] = len(new_jobs)
+            results['new_jobs'] = new_jobs
             
-            # Fetch and sync courses
             courses = await self.fetch_courses_from_udemy("programming", 25)
-            results['courses_added'] = self.sync_courses_to_database(courses, db)
+            new_courses = self.sync_courses_to_database(courses, db)
+            results['courses_added'] = len(new_courses)
+            results['new_courses'] = new_courses
             
         except Exception as e:
             logger.error(f"Error updating data: {e}")

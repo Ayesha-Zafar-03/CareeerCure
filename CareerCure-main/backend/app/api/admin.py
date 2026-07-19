@@ -14,6 +14,8 @@ from app.models.user import User
 from app.models.profile import Profile
 from app.models.career import Internship, Course
 from app.services.external_data_service import external_data_service
+from app.vector.chroma_client import upsert_internship, upsert_course
+from app.vector.embedding_service import embed_texts
 import logging
 
 logger = logging.getLogger(__name__)
@@ -77,6 +79,71 @@ class DataSyncResponse(BaseModel):
     total_jobs: int
     total_courses: int
     errors: list = []
+
+
+class JobCreateRequest(BaseModel):
+    title: str
+    company: str
+    description: str
+    required_skills: list = []
+    location: Optional[str] = None
+    duration: Optional[str] = None
+    application_url: Optional[str] = None
+    salary_range: Optional[str] = None
+    remote_option: Optional[str] = None
+
+
+class JobUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    company: Optional[str] = None
+    description: Optional[str] = None
+    required_skills: Optional[list] = None
+    location: Optional[str] = None
+    duration: Optional[str] = None
+    application_url: Optional[str] = None
+    salary_range: Optional[str] = None
+    remote_option: Optional[str] = None
+
+
+class CourseCreateRequest(BaseModel):
+    title: str
+    provider: str
+    description: str
+    instructor: Optional[str] = None
+    required_skills: list = []
+    skills_gained: list = []
+    difficulty_level: Optional[str] = None
+    duration: Optional[str] = None
+    price: Optional[str] = None
+    course_url: str
+    rating: Optional[float] = None
+    category: Optional[str] = None
+
+
+class CourseUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    provider: Optional[str] = None
+    description: Optional[str] = None
+    instructor: Optional[str] = None
+    required_skills: Optional[list] = None
+    skills_gained: Optional[list] = None
+    difficulty_level: Optional[str] = None
+    duration: Optional[str] = None
+    price: Optional[str] = None
+    course_url: Optional[str] = None
+    rating: Optional[float] = None
+    category: Optional[str] = None
+
+
+class DBStatsResponse(BaseModel):
+    total_users: int
+    active_users: int
+    total_jobs: int
+    total_courses: int
+    total_profiles: int
+    total_roadmaps: int
+    db_status: str
+    db_version: str
 
 
 # ── Dashboard Stats ───────────────────────────────────────────────────────────
@@ -195,26 +262,28 @@ async def update_user(
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: int,
+    hard: bool = Query(False),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    """Delete a user (soft delete by deactivating)"""
+    """Delete a user. Pass ?hard=true to permanently remove, otherwise soft-deletes (deactivates)."""
     
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Prevent admin from deleting themselves
     if user.id == admin_user.id:
-        raise HTTPException(
-            status_code=400, 
-            detail="Cannot delete yourself"
-        )
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
     
-    # Soft delete by deactivating
+    if hard:
+        db.delete(user)
+        db.commit()
+        return {"message": "User permanently deleted"}
+    
     user.is_active = False
     user.updated_at = datetime.now(timezone.utc)
     db.commit()
+    return {"message": "User deactivated successfully"}
     
     return {"message": "User deactivated successfully"}
 
@@ -278,6 +347,36 @@ async def sync_external_data(
         
         results = await external_data_service.update_all_data(db)
         
+        # Reindex newly added items into ChromaDB for AI recommendations
+        reindexed_jobs = 0
+        reindexed_courses = 0
+        
+        new_jobs = results.get('new_jobs', [])
+        if new_jobs:
+            try:
+                descriptions = [j.description or f"{j.title} at {j.company}" for j in new_jobs]
+                embeddings = embed_texts(descriptions)
+                for job, emb in zip(new_jobs, embeddings):
+                    upsert_internship(job.id, job.description or job.title, emb)
+                    reindexed_jobs += 1
+                logger.info(f"Reindexed {reindexed_jobs} jobs into ChromaDB")
+            except Exception as e:
+                logger.error(f"ChromaDB job reindex error: {e}")
+                results['errors'].append(f"ChromaDB job reindex failed: {str(e)}")
+        
+        new_courses = results.get('new_courses', [])
+        if new_courses:
+            try:
+                descriptions = [c.description or c.title for c in new_courses]
+                embeddings = embed_texts(descriptions)
+                for course, emb in zip(new_courses, embeddings):
+                    upsert_course(course.id, course.description or course.title, emb, course.skills_gained)
+                    reindexed_courses += 1
+                logger.info(f"Reindexed {reindexed_courses} courses into ChromaDB")
+            except Exception as e:
+                logger.error(f"ChromaDB course reindex error: {e}")
+                results['errors'].append(f"ChromaDB course reindex failed: {str(e)}")
+        
         # Get current totals
         total_jobs = db.query(Internship).count()
         total_courses = db.query(Course).count()
@@ -290,7 +389,7 @@ async def sync_external_data(
             errors=results.get('errors', [])
         )
         
-        logger.info(f"Data sync completed: {results['jobs_added']} jobs, {results['courses_added']} courses added")
+        logger.info(f"Data sync completed: {results['jobs_added']} jobs, {results['courses_added']} courses added, {reindexed_jobs} jobs + {reindexed_courses} courses reindexed")
         return response
         
     except Exception as e:
@@ -334,13 +433,22 @@ async def delete_course(
 async def list_jobs(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    """List all jobs with pagination (admin only)"""
+    """List all jobs with pagination and search (admin only)"""
+    query = db.query(Internship)
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            (Internship.title.ilike(term)) |
+            (Internship.company.ilike(term)) |
+            (Internship.location.ilike(term))
+        )
+    total = query.count()
     offset = (page - 1) * limit
-    jobs = db.query(Internship).order_by(desc(Internship.created_at)).offset(offset).limit(limit).all()
-    total = db.query(Internship).count()
+    jobs = query.order_by(desc(Internship.created_at)).offset(offset).limit(limit).all()
     
     return {"jobs": jobs, "total": total, "page": page, "limit": limit}
 
@@ -349,12 +457,172 @@ async def list_jobs(
 async def list_courses(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = Query(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    """List all courses with pagination (admin only)"""
+    """List all courses with pagination and search (admin only)"""
+    query = db.query(Course)
+    if search:
+        term = f"%{search}%"
+        query = query.filter(
+            (Course.title.ilike(term)) |
+            (Course.provider.ilike(term)) |
+            (Course.category.ilike(term))
+        )
+    total = query.count()
     offset = (page - 1) * limit
-    courses = db.query(Course).order_by(desc(Course.created_at)).offset(offset).limit(limit).all()
-    total = db.query(Course).count()
+    courses = query.order_by(desc(Course.created_at)).offset(offset).limit(limit).all()
     
     return {"courses": courses, "total": total, "page": page, "limit": limit}
+
+
+@router.get("/jobs/search")
+async def search_jobs(
+    q: str = Query(""),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Search jobs by title or company (admin only)"""
+    query = db.query(Internship)
+    if q:
+        term = f"%{q}%"
+        query = query.filter(
+            (Internship.title.ilike(term)) |
+            (Internship.company.ilike(term)) |
+            (Internship.location.ilike(term))
+        )
+    total = query.count()
+    offset = (page - 1) * limit
+    jobs = query.order_by(desc(Internship.created_at)).offset(offset).limit(limit).all()
+    
+    return {"jobs": jobs, "total": total, "page": page, "limit": limit}
+
+
+# ── Job CRUD ──────────────────────────────────────────────────────────────────
+
+@router.get("/jobs/{job_id}")
+async def get_job(
+    job_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get a single job by ID (admin only)"""
+    job = db.query(Internship).filter(Internship.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.post("/jobs")
+async def create_job(
+    data: JobCreateRequest,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new job listing (admin only)"""
+    job = Internship(**data.model_dump())
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return {"message": "Job created successfully", "job": job}
+
+
+@router.put("/jobs/{job_id}")
+async def update_job(
+    job_id: int,
+    data: JobUpdateRequest,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing job (admin only)"""
+    job = db.query(Internship).filter(Internship.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(job, field, value)
+    
+    db.commit()
+    db.refresh(job)
+    return {"message": "Job updated successfully", "job": job}
+
+
+# ── Course CRUD ───────────────────────────────────────────────────────────────
+
+@router.get("/courses/{course_id}")
+async def get_course(
+    course_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get a single course by ID (admin only)"""
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return course
+
+
+@router.post("/courses")
+async def create_course(
+    data: CourseCreateRequest,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new course listing (admin only)"""
+    course = Course(**data.model_dump())
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+    return {"message": "Course created successfully", "course": course}
+
+
+@router.put("/courses/{course_id}")
+async def update_course(
+    course_id: int,
+    data: CourseUpdateRequest,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing course (admin only)"""
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(course, field, value)
+    
+    db.commit()
+    db.refresh(course)
+    return {"message": "Course updated successfully", "course": course}
+
+
+# ── Database Stats ────────────────────────────────────────────────────────────
+
+@router.get("/db/stats", response_model=DBStatsResponse)
+async def get_db_stats(
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get database statistics for the admin panel"""
+    from app.models.career import Roadmap
+    
+    try:
+        db_version = db.execute("SELECT version()").scalar() or "Unknown"
+        db_status = "Connected"
+    except Exception:
+        db_version = "Unknown"
+        db_status = "Error"
+    
+    return DBStatsResponse(
+        total_users=db.query(User).count(),
+        active_users=db.query(User).filter(User.is_active == True).count(),
+        total_jobs=db.query(Internship).count(),
+        total_courses=db.query(Course).count(),
+        total_profiles=db.query(Profile).count(),
+        total_roadmaps=db.query(Roadmap).count(),
+        db_status=db_status,
+        db_version=db_version,
+    )

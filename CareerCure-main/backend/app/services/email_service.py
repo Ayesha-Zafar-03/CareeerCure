@@ -126,3 +126,47 @@ def send_password_reset_email(to_email: str, full_name: str, otp: str) -> bool:
     </html>
     """
     return send_email(to_email, subject, html)
+
+
+def send_login_otp_email(to_email: str, full_name: str, otp: str) -> bool:
+    subject = "Your CareerCure admin login code"
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; background: #f9fafb; padding: 40px 0;">
+      <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px;
+                  padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="background: #2563eb; display: inline-block; padding: 12px 16px;
+                      border-radius: 10px; margin-bottom: 16px;">
+            <span style="color: white; font-size: 20px; font-weight: bold;">💼 CareerCure</span>
+          </div>
+          <h1 style="color: #111827; font-size: 22px; margin: 0;">Admin login verification</h1>
+        </div>
+
+        <p style="color: #6b7280; font-size: 15px;">Hi <strong>{full_name}</strong>,</p>
+        <p style="color: #6b7280; font-size: 15px;">
+          A login to your admin account was requested. Enter the code below to continue.
+          This code expires in <strong>10 minutes</strong>.
+        </p>
+
+        <div style="background: #eff6ff; border: 2px dashed #2563eb; border-radius: 10px;
+                    padding: 24px; text-align: center; margin: 28px 0;">
+          <p style="color: #6b7280; font-size: 13px; margin: 0 0 8px;">Your login code</p>
+          <p style="color: #1d4ed8; font-size: 40px; font-weight: bold; letter-spacing: 10px;
+                    margin: 0; font-family: monospace;">{otp}</p>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+          If you didn't try to log in, change your password immediately.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0;">
+        <p style="color: #d1d5db; font-size: 12px; text-align: center; margin: 0;">
+          CareerCure — AI-Powered Career Development Platform
+        </p>
+      </div>
+    </body>
+    </html>
+    """
+    return send_email(to_email, subject, html)

@@ -41,8 +41,12 @@ When users ask about courses, learning, skills, training, or education:
 
 For general help queries, both jobs AND courses will be shown to give users the full picture of available opportunities.
 
-Be concise, practical, and encouraging. Use the provided context when relevant.
-If you don't know something specific, say so honestly and suggest where to find the answer."""
+RESPONSE STYLE (very important):
+- Keep replies SHORT: 2-4 sentences, or at most 3-4 concise bullet points.
+- Get straight to the point. No long intros, no repeating the question, no filler.
+- Only expand into detail if the user explicitly asks for more.
+- Be practical and encouraging.
+If you don't know something specific, say so briefly and suggest where to find the answer."""
 
 
 def detect_intent(message: str) -> Dict[str, bool]:
@@ -341,8 +345,8 @@ def chat(user_message: str, conversation_history: list, user_context: str = "", 
     response = client.chat.completions.create(
         model=settings.GROQ_MODEL,
         messages=messages,
-        temperature=0.7,
-        max_tokens=1024,
+        temperature=0.6,
+        max_tokens=350,
     )
 
     reply = response.choices[0].message.content

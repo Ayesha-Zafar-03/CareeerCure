@@ -2,6 +2,12 @@
 Pytest configuration — sets up an in-memory SQLite test database
 and a TestClient that uses it instead of the real PostgreSQL DB.
 """
+import os
+
+os.environ.setdefault("TESTING", "1")
+os.environ.setdefault("DEBUG", "true")
+os.environ.setdefault("SECRET_KEY", "test-only-strong-key-abcdefghijklmnopqrstuvwxyz-123456")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

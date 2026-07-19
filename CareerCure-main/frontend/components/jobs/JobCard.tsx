@@ -52,7 +52,7 @@ export default function JobCard({ job, onSave, saved = false }: JobCardProps) {
       className="group relative h-full flex flex-col bg-surface border border-line/50 p-5
                  transition-all duration-300 ease-out
                  hover:border-primary hover:-translate-y-1 hover:shadow-md
-                 hover:shadow-[0_12px_28px_-12px_rgba(101,146,135,0.28)]"
+                 hover:shadow-[0_12px_28px_-12px_rgba(11,36,67,0.28)]"
     >
       <span
         className="absolute left-0 top-0 h-[2px] w-0 bg-primary transition-all duration-300 ease-out group-hover:w-full"
@@ -173,7 +173,7 @@ export default function JobCard({ job, onSave, saved = false }: JobCardProps) {
             href={job.application_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 font-mono text-[11px] tracking-[0.1em] uppercase py-2.5 bg-primary text-white transition-all duration-200 hover:bg-primary/85 hover:shadow-[0_6px_16px_-6px_rgba(101,146,135,0.55)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 font-mono text-[11px] tracking-[0.1em] uppercase py-2.5 bg-primary text-white transition-all duration-200 hover:bg-primary/85 hover:shadow-[0_6px_16px_-6px_rgba(11,36,67,0.55)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             View job
             <ExternalLinkIcon className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />

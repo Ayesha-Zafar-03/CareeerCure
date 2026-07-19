@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { BriefcaseIcon, LogOutIcon, UserIcon, MenuIcon, XIcon, ShieldIcon } from "lucide-react";
+import { LogOutIcon, UserIcon, MenuIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
 
@@ -30,13 +30,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 group">
-            <div className="bg-primary-dark p-1.5 rounded-lg transition-transform group-hover:scale-105">
-              <ShieldIcon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-primary-dark">CareerCure</span>
-              <span className="font-mono text-[10px] tracking-wider uppercase text-primary ml-2">Admin</span>
-            </div>
+            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
+            <span className="font-mono text-[10px] tracking-wider uppercase text-primary">Admin</span>
           </Link>
 
           {user && (

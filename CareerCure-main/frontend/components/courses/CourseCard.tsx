@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookmarkIcon, ClockIcon, StarIcon, ExternalLinkIcon, PlusIcon, CheckIcon, ChevronDown } from "lucide-react";
 import type { MockCourse } from "@/lib/mockData";
+import { planApi } from "@/lib/api";
 
 interface CourseCardProps {
   course: MockCourse;
@@ -15,7 +16,6 @@ const LEVEL_STYLES: Record<string, string> = {
 };
 
 const MAX_VISIBLE_TAGS = 3;
-const PLANNED_KEY = "planned-courses";
 const ROADMAP_LIST_KEY = "roadmap-titles";
 
 export default function CourseCard({ course }: CourseCardProps) {
@@ -39,51 +39,44 @@ export default function CourseCard({ course }: CourseCardProps) {
   }, []);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(PLANNED_KEY);
-      if (stored) {
-        const courses = JSON.parse(stored);
-        if (Array.isArray(courses)) {
-          const found = courses.find((c: any) => c.id === course.id);
-          setInPlan(!!found);
-          if (found?.roadmap) setCourseRoadmap(found.roadmap);
-        }
+    let cancelled = false;
+    planApi.list().then((res) => {
+      if (cancelled) return;
+      const found = (res.data.courses || []).find((c: any) => c.id === course.id);
+      if (found) {
+        setInPlan(true);
+        if (found.roadmap) setCourseRoadmap(found.roadmap);
       }
-    } catch {}
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, [course.id]);
 
-  const addToPlan = (roadmap: string) => {
+  const addToPlan = async (roadmap: string) => {
+    const entry = {
+      id: course.id,
+      title: course.title,
+      provider: course.provider,
+      course_url: course.course_url,
+      duration: course.duration ?? "",
+      difficulty_level: course.difficulty_level ?? "",
+      description: course.description ?? "",
+      roadmap,
+    };
     try {
-      const stored = localStorage.getItem(PLANNED_KEY);
-      let courses: any[] = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(courses)) courses = [];
-      courses.push({
-        id: course.id,
-        title: course.title,
-        provider: course.provider,
-        course_url: course.course_url,
-        duration: course.duration ?? "",
-        difficulty_level: course.difficulty_level ?? "",
-        description: course.description ?? "",
-        roadmap,
-      });
-      localStorage.setItem(PLANNED_KEY, JSON.stringify(courses));
-      setInPlan(true);
-      setCourseRoadmap(roadmap);
-      setPickerOpen(false);
+      const res = await planApi.add(entry);
+      if (res.data?.course?.roadmap) setCourseRoadmap(res.data.course.roadmap);
     } catch {}
+    setInPlan(true);
+    setCourseRoadmap(roadmap);
+    setPickerOpen(false);
   };
 
-  const removeFromPlan = () => {
+  const removeFromPlan = async () => {
     try {
-      const stored = localStorage.getItem(PLANNED_KEY);
-      let courses: any[] = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(courses)) courses = [];
-      courses = courses.filter((c: any) => c.id !== course.id);
-      localStorage.setItem(PLANNED_KEY, JSON.stringify(courses));
-      setInPlan(false);
-      setCourseRoadmap("");
+      await planApi.remove(course.id);
     } catch {}
+    setInPlan(false);
+    setCourseRoadmap("");
   };
 
   const handleClick = () => {
@@ -107,7 +100,7 @@ export default function CourseCard({ course }: CourseCardProps) {
       className="group relative h-full flex flex-col bg-surface border border-line/50 p-5
                  transition-all duration-300 ease-out
                  hover:border-primary hover:-translate-y-1
-                 hover:shadow-[0_12px_28px_-12px_rgba(0,51,102,0.28)]"
+                 hover:shadow-[0_12px_28px_-12px_rgba(11,36,67,0.28)]"
     >
       <span
         className="absolute left-0 top-0 h-[2px] w-0 bg-primary transition-all duration-300 ease-out
@@ -232,7 +225,7 @@ export default function CourseCard({ course }: CourseCardProps) {
                       focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             inPlan
               ? "bg-accent text-white hover:bg-accent/85"
-              : "bg-primary text-white hover:bg-primary/85 hover:shadow-[0_6px_16px_-6px_rgba(0,51,102,0.55)]"
+              : "bg-primary text-white hover:bg-primary/85 hover:shadow-[0_6px_16px_-6px_rgba(11,36,67,0.55)]"
           }`}
         >
           {inPlan ? (

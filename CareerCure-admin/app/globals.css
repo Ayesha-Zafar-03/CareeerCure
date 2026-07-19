@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,67 +9,45 @@
     box-sizing: border-box;
   }
   body {
-    @apply bg-paper text-ink font-sans antialiased;
-  }
-  h1, h2, h3, h4 {
-    @apply font-serif text-primary-dark;
+    @apply bg-cream-50 text-navy font-sans antialiased;
   }
   ::selection {
-    @apply bg-accent/20 text-primary-dark;
+    @apply bg-navy/20 text-navy;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary hover:bg-primary-d text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-navy hover:bg-navy-50 text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
+  }
+  .btn-gold {
+    @apply bg-gold hover:bg-gold-light text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
   }
   .btn-secondary {
-    @apply bg-surface hover:bg-line/20 text-ink font-semibold py-2.5 px-5 rounded-lg border border-line transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0;
+    @apply bg-white hover:bg-cream-100 text-navy font-medium py-2 px-4 rounded-lg border border-cream-300 transition-all duration-150 text-sm;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
+  }
+  .btn-ghost {
+    @apply hover:bg-cream-100 text-navy/60 hover:text-navy font-medium py-2 px-4 rounded-lg transition-all duration-150 text-sm;
   }
   .card {
-    @apply bg-surface rounded-xl shadow-sm border border-line p-6 transition-all duration-200 hover:shadow-md;
+    @apply bg-white rounded-xl border border-cream-200 p-6;
   }
   .input {
-    @apply w-full border border-line rounded-lg px-4 py-2.5 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200 text-ink placeholder:text-ink/40;
+    @apply w-full border border-cream-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/20 focus:border-navy transition-colors text-navy placeholder:text-navy/30;
   }
   .label {
-    @apply block text-sm font-medium text-ink/70 mb-1;
+    @apply block text-xs font-medium text-navy/50 uppercase tracking-wider mb-1.5;
   }
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
   }
   .stat-card {
-    @apply bg-surface border border-line rounded-lg p-5 transition-all duration-200 hover:shadow-md hover:border-primary/30;
+    @apply bg-white border border-cream-200 rounded-xl p-5;
   }
-  .nav-link {
-    @apply font-medium text-sm text-ink/60 hover:text-primary transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full;
-  }
-  .nav-link-active {
-    @apply text-primary after:w-full;
-  }
-}
-
-@layer utilities {
-  @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(180deg); }
-  }
-  @keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .animate-float { animation: float 6s ease-in-out infinite; }
-  .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
-  .animate-gradient { animation: gradient 3s ease infinite; }
-  .line-clamp-2 {
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .line-clamp-3 {
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  .table-row {
+    @apply border-b border-cream-100 hover:bg-cream-50/50 transition-colors;
   }
 }

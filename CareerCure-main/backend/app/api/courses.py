@@ -61,15 +61,24 @@ def get_course_matches(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get personalised course matches based on user's CV and skill gaps."""
+    """Get personalised course matches based on the user's profile."""
     profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
-    if not profile or not profile.cv_text:
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found.")
+
+    query = (
+        profile.career_goal
+        or (", ".join(profile.skills) if profile.skills else None)
+        or profile.education
+        or profile.cv_text
+    )
+    if not query:
         raise HTTPException(
             status_code=404,
-            detail="No CV found. Please upload your CV first to get personalised course recommendations.",
+            detail="Add a career goal, skills, or upload your CV to get personalised course recommendations.",
         )
 
-    matches = get_course_matches(profile.cv_text, db, top_k=10)
+    matches = get_course_matches(query, db, top_k=10, profile=profile)
     return {"matches": matches}
 
 

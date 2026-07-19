@@ -110,9 +110,9 @@ export default function RegisterPage() {
       const { access_token, user } = res.data;
       localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
-      // Log in via context then redirect
+      // Log in via context then redirect to CV upload so profile data is gathered from the CV
       await login(email, password);
-      router.push("/dashboard");
+      router.push("/cv");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Invalid or expired code. Please try again.");
     } finally {
@@ -138,25 +138,44 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-paper via-primary/5 to-primary/10 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex">
+      {/* Left panel — brand */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary-dark relative overflow-hidden items-center justify-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 px-16 max-w-lg">
+          <Link href="/" className="flex items-center mb-8">
+            <img src="/logo.jpeg" alt="CareerCure" className="h-10 w-auto" />
+          </Link>
+          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+            Start your<br />career journey
+          </h1>
+          <p className="text-white/60 text-base leading-relaxed">
+            Create an account to unlock personalized roadmaps, curated internships, and courses tailored to your goals.
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper overflow-y-auto">
+        <div className="w-full max-w-sm">
         {step === "form" && (
-          <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line animate-fade-in-up">
-            {/* Logo & Header */}
-            <div className="text-center mb-8">
-              <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="bg-primary p-2.5 rounded-xl">
-                  <BriefcaseIcon className="w-6 h-6 text-white" />
-                </div>
-                <span className="font-bold text-xl text-primary-dark">CareerCure</span>
-              </Link>
-              <h1 className="text-2xl font-bold text-primary-dark mb-2">Create your account</h1>
-              <p className="text-ink/60">Join CareerCure and take the next step in your career journey.</p>
+          <div className="animate-fade-in-up">
+            {/* Mobile logo */}
+            <Link href="/" className="lg:hidden block mb-10">
+              <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
+            </Link>
+
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-primary-dark mb-1">Create your account</h2>
+              <p className="text-sm text-ink/50">Take the next step in your career journey</p>
             </div>
 
-            {/* Social Login Buttons */}
+            {/* Social Login Buttons (Google only) */}
             <div id="social-login-section">
-              <SocialLoginButtons emailFallbackLabel="email registration" />
+              <SocialLoginButtons emailFallbackLabel="email registration" googleOnly />
             </div>
 
             {/* Only show "or" divider if social login is potentially available */}
@@ -340,7 +359,7 @@ export default function RegisterPage() {
                 <label className="block text-sm font-medium text-ink text-center mb-4">
                   Enter 6-digit verification code
                 </label>
-                <div className="flex gap-3 justify-center" onPaste={handleOtpPaste}>
+                <div className="flex gap-2 sm:gap-3 justify-center" onPaste={handleOtpPaste}>
                   {otp.map((digit, i) => (
                     <input
                       key={i}
@@ -351,7 +370,7 @@ export default function RegisterPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="w-12 h-12 text-center text-xl font-bold border-2 border-line rounded-xl
+                      className="w-10 h-12 sm:w-12 text-center text-xl font-bold border-2 border-line rounded-xl
                                  focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40
                                  transition"
                     />
@@ -395,6 +414,7 @@ export default function RegisterPage() {
             </form>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

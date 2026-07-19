@@ -1,1 +1,0 @@
-// LoadingAnimation component not available

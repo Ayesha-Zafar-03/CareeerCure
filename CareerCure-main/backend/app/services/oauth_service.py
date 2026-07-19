@@ -187,6 +187,12 @@ class OAuthService:
                 )
                 
                 db.add(new_user)
+                db.flush()
+                
+                # Create an associated profile so the rest of the app works
+                from app.models.profile import Profile
+                db.add(Profile(user_id=new_user.id))
+                
                 db.commit()
                 db.refresh(new_user)
                 return new_user

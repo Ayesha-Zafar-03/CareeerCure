@@ -1,19 +1,20 @@
 import random
 import string
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
 from app.core.config import settings
 from app.core.oauth_utils import is_google_oauth_configured, is_linkedin_oauth_configured
 from app.models.user import User
 from app.models.profile import Profile
 from app.models.otp import OTP
-from app.services.email_service import send_verification_email, send_password_reset_email
+from app.services.email_service import send_verification_email, send_password_reset_email, send_login_otp_email
 from app.services.oauth_service import OAuthService
 import logging
 
@@ -116,7 +117,8 @@ class TokenResponse(BaseModel):
 # ── Step 1: Register → sends OTP ─────────────────────────────────────────────
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(req: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, req: RegisterRequest, db: Session = Depends(get_db)):
     """
     Register a new account. Sends a 6-digit OTP to the email.
     Account is not active until email is verified.
@@ -155,17 +157,17 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     sent = send_verification_email(req.email, req.full_name, code)
 
     return {
-        "message": f"Verification code: {code}",  # Show OTP directly
+        "message": "A verification code has been sent to your email.",
         "email": req.email,
         "email_sent": sent,
-        "otp": code  # Direct OTP for development
     }
 
 
 # ── Step 2: Verify email OTP → activates account ─────────────────────────────
 
 @router.post("/verify-email", response_model=TokenResponse)
-def verify_email(req: VerifyEmailRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def verify_email(request: Request, req: VerifyEmailRequest, db: Session = Depends(get_db)):
     """Verify the OTP sent to email. Returns JWT on success."""
     user = db.query(User).filter(User.email == req.email).first()
     if not user:
@@ -181,14 +183,15 @@ def verify_email(req: VerifyEmailRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {"id": user.id, "email": user.email, "full_name": user.full_name},
+        "user": {"id": user.id, "email": user.email, "full_name": user.full_name, "is_admin": user.is_admin},
     }
 
 
 # ── Resend OTP ────────────────────────────────────────────────────────────────
 
 @router.post("/resend-otp")
-def resend_otp(req: ResendOTPRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def resend_otp(request: Request, req: ResendOTPRequest, db: Session = Depends(get_db)):
     """Resend OTP for email verification or password reset."""
     user = db.query(User).filter(User.email == req.email).first()
     if not user:
@@ -198,6 +201,8 @@ def resend_otp(req: ResendOTPRequest, db: Session = Depends(get_db)):
 
     if req.purpose == "email_verification":
         sent = send_verification_email(req.email, user.full_name, code)
+    elif req.purpose == "admin_login":
+        sent = send_login_otp_email(req.email, user.full_name, code)
     else:
         sent = send_password_reset_email(req.email, user.full_name, code)
 
@@ -206,10 +211,11 @@ def resend_otp(req: ResendOTPRequest, db: Session = Depends(get_db)):
 
 # ── Login ─────────────────────────────────────────────────────────────────────
 
-@router.post("/login", response_model=TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@router.post("/login")
+@limiter.limit("10/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not user.hashed_password or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
     if not user.is_active:
@@ -218,11 +224,45 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Email not verified. Please verify your email first."
         )
 
+    # Admins must complete a second factor (OTP) on every login.
+    if user.is_admin:
+        code = create_otp(user.email, "admin_login", db)
+        send_login_otp_email(user.email, user.full_name, code)
+        return {
+            "admin_otp_required": True,
+            "email": user.email,
+            "message": "A login verification code has been sent to your email.",
+        }
+
     token = create_access_token({"sub": str(user.id)})
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {"id": user.id, "email": user.email, "full_name": user.full_name},
+        "user": {"id": user.id, "email": user.email, "full_name": user.full_name, "is_admin": user.is_admin},
+    }
+
+
+class AdminLoginVerifyRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+
+@router.post("/login/verify-otp", response_model=TokenResponse)
+@limiter.limit("10/minute")
+def verify_admin_login(request: Request, req: AdminLoginVerifyRequest, db: Session = Depends(get_db)):
+    """Second factor for admin login: verify the emailed OTP and return a JWT."""
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=401, detail="Invalid login attempt")
+
+    if not verify_otp(req.email, req.otp, "admin_login", db):
+        raise HTTPException(status_code=400, detail="Invalid or expired login code")
+
+    token = create_access_token({"sub": str(user.id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {"id": user.id, "email": user.email, "full_name": user.full_name, "is_admin": user.is_admin},
     }
 
 
@@ -234,14 +274,15 @@ def refresh_token(current_user: User = Depends(get_current_user)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {"id": current_user.id, "email": current_user.email, "full_name": current_user.full_name},
+        "user": {"id": current_user.id, "email": current_user.email, "full_name": current_user.full_name, "is_admin": current_user.is_admin},
     }
 
 
 # ── Forgot Password → sends OTP ───────────────────────────────────────────────
 
 @router.post("/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """Send a 6-digit OTP to the email for password reset."""
     user = db.query(User).filter(User.email == req.email).first()
 
@@ -250,19 +291,16 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
         return {"message": "If that email is registered, a reset code has been sent."}
 
     code = create_otp(req.email, "password_reset", db)
-    sent = send_password_reset_email(req.email, user.full_name, code)
+    send_password_reset_email(req.email, user.full_name, code)
 
-    return {
-        "message": f"Password reset code: {code}",  # Show OTP directly for development
-        "email_sent": sent,
-        "otp": code  # Direct OTP for development
-    }
+    return {"message": "If that email is registered, a reset code has been sent."}
 
 
 # ── Reset Password with OTP ───────────────────────────────────────────────────
 
 @router.post("/reset-password")
-def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def reset_password(request: Request, req: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Reset password using the OTP sent to email."""
     if len(req.new_password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
@@ -304,8 +342,11 @@ class TestEmailRequest(BaseModel):
     email: EmailStr
 
 @router.post("/test-email")
-def test_email(req: TestEmailRequest, db: Session = Depends(get_db)):
-    """Test endpoint to debug email sending."""
+def test_email(req: TestEmailRequest, current_user: User = Depends(get_current_user)):
+    """Test endpoint to debug email sending (admin only)."""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
     from app.services.email_service import send_email
     
     test_html = """
@@ -332,6 +373,7 @@ def get_me(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "full_name": current_user.full_name,
         "is_active": current_user.is_active,
+        "is_admin": current_user.is_admin,
     }
 
 
@@ -372,7 +414,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Failed to create user account")
         
         # Generate JWT token
-        access_token = create_access_token(data={"sub": user.email})
+        access_token = create_access_token(data={"sub": str(user.id)})
         
         # Redirect to frontend with token
         redirect_url = f"{settings.FRONTEND_URL}/auth/success?token={access_token}"
@@ -399,7 +441,7 @@ async def linkedin_callback(code: str, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Failed to create user account")
         
         # Generate JWT token
-        access_token = create_access_token(data={"sub": user.email})
+        access_token = create_access_token(data={"sub": str(user.id)})
         
         # Redirect to frontend with token
         redirect_url = f"{settings.FRONTEND_URL}/auth/success?token={access_token}"

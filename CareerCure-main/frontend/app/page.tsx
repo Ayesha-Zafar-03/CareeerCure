@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { 
+import {
   BriefcaseIcon, 
   FileTextIcon, 
   MapIcon, 
@@ -19,6 +19,7 @@ import {
   UsersIcon,
   BookOpenIcon
 } from "lucide-react";
+import VantaBackground from "@/components/VantaBackground";
 
 
 const FEATURES = [
@@ -26,31 +27,31 @@ const FEATURES = [
     icon: FileTextIcon,
     title: "AI CV Analysis",
     description: "Upload your CV and get instant AI-powered feedback — skills extracted, gaps identified, and improvements suggested.",
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-primary/10 text-primary",
   },
   {
     icon: MapIcon,
     title: "Career Roadmap",
     description: "Get a personalised, step-by-step learning path tailored to your skills and career goal.",
-    color: "bg-purple-50 text-purple-600",
+    color: "bg-accent/10 text-accent",
   },
   {
     icon: BriefcaseIcon,
     title: "Internship Matching",
     description: "Semantically matched internships based on your CV — ranked by how well they fit your profile.",
-    color: "bg-green-50 text-green-600",
+    color: "bg-primary/10 text-primary",
   },
   {
     icon: BookOpenIcon,
     title: "Course Recommendations",
     description: "Discover top courses from Udemy, Coursera, and edX — personalized to fill your skill gaps and advance your career.",
-    color: "bg-orange-50 text-orange-600",
+    color: "bg-accent/10 text-accent",
   },
   {
     icon: MessageCircleIcon,
     title: "AI Career Counselor",
     description: "Chat with an AI counselor powered by Groq LLaMA3 and RAG for real-time career guidance.",
-    color: "bg-indigo-50 text-indigo-600",
+    color: "bg-primary/10 text-primary",
   },
 ];
 
@@ -65,53 +66,29 @@ const BENEFITS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-paper via-surface to-primary/5 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Floating Orbs */}
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className={`absolute rounded-full animate-float opacity-20 ${
-              i % 3 === 0 ? 'bg-primary/40' : i % 3 === 1 ? 'bg-primary' : 'bg-primary/20'
-            } flex items-center justify-center`}
-            style={{
-              width: `${30 + Math.random() * 60}px`,
-              height: `${30 + Math.random() * 60}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${6 + Math.random() * 8}s`
-            }}
-          >
-            {i % 4 === 0 && <CodeIcon className="w-4 h-4 text-white opacity-60" />}
-            {i % 4 === 1 && <DatabaseIcon className="w-4 h-4 text-white opacity-60" />}
-            {i % 4 === 2 && <UsersIcon className="w-4 h-4 text-white opacity-60" />}
-            {i % 4 === 3 && <StarIcon className="w-4 h-4 text-white opacity-60" />}
-          </div>
-        ))}
-        
-        {/* Animated Grid */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-pulse"></div>
-      </div>
+    <div className="min-h-screen relative overflow-hidden">
+      <VantaBackground />
+      <div className="fixed inset-0 bg-gradient-to-br from-paper/90 via-surface/60 to-primary/10 -z-10" />
+      <div className="relative z-10">
       {/* Navbar */}
       <nav className="border-b border-line/50 px-6 py-4 backdrop-blur-sm bg-surface/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 group">
-            <div className="bg-gradient-to-br from-primary to-primary-d p-1.5 rounded-lg group-hover:scale-110 transition-transform duration-300">
-              <BriefcaseIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-              CareerCure
-            </span>
+            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
           </div>
-          <div className="flex items-center gap-3">
+           <div className="flex items-center gap-3">
             <Link 
               href="/login" 
               className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
             >
               Login
             </Link>
+            <a
+              href={process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login"}
+              className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
+            >
+              Login as Admin
+            </a>
             <Link
               href="/register"
               className="bg-gradient-to-r from-primary to-primary-d hover:from-primary-d hover:to-primary-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
@@ -168,15 +145,21 @@ export default function LandingPage() {
           >
             Sign In
           </Link>
+          <a
+            href={process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login"}
+            className="flex items-center gap-2 text-sm text-ink/50 hover:text-primary font-medium transition-colors duration-200 underline-offset-4 hover:underline"
+          >
+            Are you an admin? Login here
+          </a>
         </div>
 
         {/* Animated Stats/Features Bar */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in-up" style={{animationDelay: '1.5s'}}>
           {[
             { icon: BrainIcon, label: "AI-Powered", value: "100%", color: "text-primary" },
-            { icon: TrendingUpIcon, label: "Success Rate", value: "95%", color: "text-green-500" },
+            { icon: TrendingUpIcon, label: "Success Rate", value: "95%", color: "text-accent" },
             { icon: TargetIcon, label: "Job Matches", value: "1000+", color: "text-primary" },
-            { icon: ZapIcon, label: "Fast Analysis", value: "< 30s", color: "text-yellow-500" }
+            { icon: ZapIcon, label: "Fast Analysis", value: "< 30s", color: "text-accent" }
           ].map((stat, index) => (
             <div key={stat.label} className="text-center p-4 bg-surface/60 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-surface/80 transition-all duration-300 group">
               <div className="flex justify-center mb-3">
@@ -251,7 +234,7 @@ export default function LandingPage() {
                   className="flex items-center gap-3 text-ink animate-fade-in-up group"
                   style={{animationDelay: `${index * 0.1}s`}}
                 >
-                  <div className="w-5 h-5 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-5 h-5 bg-gradient-to-br from-primary to-primary-d rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                     <CheckIcon className="w-3 h-3 text-white" />
                   </div>
                   <span className="group-hover:text-primary-dark transition-colors">{b}</span>
@@ -280,7 +263,7 @@ export default function LandingPage() {
                   </div>
                   <p className="font-semibold flex items-center gap-2">
                     Skills extracted: Python, FastAPI, SQL, Docker
-                    <ZapIcon className="w-4 h-4 text-yellow-300 animate-pulse" />
+                    <ZapIcon className="w-4 h-4 text-accent/80 animate-pulse" />
                   </p>
                 </div>
                 
@@ -291,7 +274,7 @@ export default function LandingPage() {
                   </div>
                   <p className="font-semibold flex items-center gap-2">
                     Backend Developer Intern @ StartupHub — 94% match
-                    <StarIcon className="w-4 h-4 text-yellow-300 animate-pulse" />
+                    <StarIcon className="w-4 h-4 text-accent/80 animate-pulse" />
                   </p>
                 </div>
                 
@@ -334,7 +317,7 @@ export default function LandingPage() {
             <span className="font-medium text-primary"> Ayesha Zafar, Eman & Hira Jawaid</span>
           </p>
           <div className="mt-3 flex justify-center gap-3">
-            <SparklesIcon className="w-4 h-4 text-yellow-500 animate-bounce" />
+            <SparklesIcon className="w-4 h-4 text-accent animate-bounce" />
             <RocketIcon className="w-4 h-4 text-primary/40 animate-bounce" style={{animationDelay: '0.1s'}} />
             <BriefcaseIcon className="w-4 h-4 text-primary animate-bounce" style={{animationDelay: '0.2s'}} />
             <StarIcon className="w-4 h-4 text-primary/60 animate-bounce" style={{animationDelay: '0.3s'}} />
@@ -344,6 +327,7 @@ export default function LandingPage() {
         {/* Subtle background animation */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse"></div>
       </footer>
+      </div>
       </div>
     );
 }

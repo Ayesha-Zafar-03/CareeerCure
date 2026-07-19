@@ -2,20 +2,16 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { BriefcaseIcon } from "lucide-react";
 
 function AuthErrorContent() {
   const searchParams = useSearchParams();
   const message = searchParams.get("message") || "Authentication failed";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center max-w-md w-full">
-        <Link href="/" className="inline-flex items-center gap-2 mb-6">
-          <div className="bg-primary p-2.5 rounded-xl">
-            <BriefcaseIcon className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-xl text-primary-dark">CareerCure</span>
+    <div className="min-h-screen bg-gradient-to-br from-paper via-primary/5 to-accent/5 flex items-center justify-center px-4">
+      <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line text-center max-w-md w-full">
+        <Link href="/" className="inline-block mb-6">
+          <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
         </Link>
 
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -24,8 +20,8 @@ function AuthErrorContent() {
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Authentication Failed</h1>
-        <p className="text-gray-600 mb-6">{message}</p>
+        <h1 className="text-2xl font-bold text-primary-dark mb-2">Authentication Failed</h1>
+        <p className="text-ink/60 mb-6">{message}</p>
 
         <div className="space-y-3">
           <Link
@@ -36,7 +32,7 @@ function AuthErrorContent() {
           </Link>
           <Link
             href="/register"
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors block"
+            className="w-full bg-surface hover:bg-line/20 text-ink font-medium py-3 px-4 rounded-xl border border-line transition-colors block"
           >
             Create Account
           </Link>
@@ -50,8 +46,8 @@ export default function AuthErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center px-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen bg-gradient-to-br from-paper via-primary/5 to-accent/5 flex items-center justify-center px-4">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
     >

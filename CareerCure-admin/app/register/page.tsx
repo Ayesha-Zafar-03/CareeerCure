@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/lib/api";
-import { BriefcaseIcon, EyeIcon, EyeOffIcon, MailIcon, CheckCircleIcon, LockIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, MailIcon, CheckCircleIcon, LockIcon } from "lucide-react";
 
 type Step = "form" | "verify";
 type AgeRange = "16-18" | "19-24" | "25+";
@@ -167,11 +167,8 @@ export default function RegisterPage() {
           <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line animate-fade-in-up">
             {/* Logo & Header */}
             <div className="text-center mb-8">
-              <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="bg-primary p-2.5 rounded-xl">
-                  <BriefcaseIcon className="w-6 h-6 text-white" />
-                </div>
-                <span className="font-bold text-xl text-primary-dark">CareerCure</span>
+              <Link href="/" className="inline-block mb-6">
+                <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
               </Link>
               <h1 className="text-2xl font-bold text-primary-dark mb-2">Create your account</h1>
               <p className="text-ink/60">Join CareerCure and take the next step in your career journey.</p>
@@ -368,11 +365,8 @@ export default function RegisterPage() {
         {step === "verify" && (
           <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line animate-fade-in-up">
             <div className="text-center mb-8">
-              <Link href="/" className="inline-flex items-center gap-2 mb-6">
-                <div className="bg-primary p-2.5 rounded-xl">
-                  <BriefcaseIcon className="w-6 h-6 text-white" />
-                </div>
-                <span className="font-bold text-xl text-primary-dark">CareerCure</span>
+              <Link href="/" className="inline-block mb-6">
+                <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
               </Link>
               <h1 className="text-2xl font-bold text-primary-dark mb-2">Verify your email</h1>
               <p className="text-ink/60">

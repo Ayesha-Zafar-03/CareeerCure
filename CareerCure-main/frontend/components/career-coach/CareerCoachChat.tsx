@@ -17,9 +17,11 @@ import {
   ExternalLink,
   User,
   Bot,
+  MenuIcon,
+  XIcon,
 } from "lucide-react";
 import clsx from "clsx";
-import { chatApi } from "@/lib/api";
+import { chatApi, chatHistoryApi } from "@/lib/api";
 import CourseCard from "@/components/courses/CourseCard";
 import { formatMessage } from "@/lib/chatUtils";
 
@@ -41,8 +43,7 @@ interface ConversationSummary {
   updatedAt: string;
 }
 
-const CONV_KEY = "chat-convs";
-const MSG_PREFIX = "chat-msg-";
+const DEFAULT_CONV_ID = "default";
 
 const QUICK_ACTIONS = [
   { label: "Career guidance", detail: "Find a path that fits your skills", icon: MapIcon, prompt: "What career path fits my skills?" },
@@ -75,40 +76,6 @@ function truncate(text: string, max: number): string {
   return text.slice(0, max).trimEnd() + "…";
 }
 
-function saveConversations(list: ConversationSummary[]) {
-  try { localStorage.setItem(CONV_KEY, JSON.stringify(list)); } catch {}
-}
-
-function loadConversations(): ConversationSummary[] {
-  try {
-    const raw = localStorage.getItem(CONV_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {}
-  return [];
-}
-
-function saveMessages(id: string, msgs: ChatMessage[]) {
-  try { localStorage.setItem(MSG_PREFIX + id, JSON.stringify(msgs)); } catch {}
-}
-
-function loadMessages(id: string): ChatMessage[] | null {
-  try {
-    const raw = localStorage.getItem(MSG_PREFIX + id);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length >= 1) return parsed;
-    }
-  } catch {}
-  return null;
-}
-
-function removeMessages(id: string) {
-  try { localStorage.removeItem(MSG_PREFIX + id); } catch {}
-}
-
 function groupLabel(dateStr: string): string {
   const d = new Date(dateStr);
   const now = new Date();
@@ -134,22 +101,32 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const lastMsgRef = useRef<HTMLDivElement>(null);
   const prevMsgLen = useRef(1);
   const initialSent = useRef(false);
   const restored = useRef(false);
 
-  // Restore on mount
+  // Restore on mount — load conversations from the backend session
   useEffect(() => {
-    setConversations(loadConversations());
+    chatHistoryApi.listConversations().then((res) => {
+      const backend = (res.data.conversations || []) as { conversation_id: string; message_count: number; title?: string; updated_at?: string | null }[];
+      const merged: ConversationSummary[] = backend
+        .filter((c) => c.conversation_id !== DEFAULT_CONV_ID)
+        .map((c) => {
+          const when = c.updated_at || new Date().toISOString();
+          return {
+            id: c.conversation_id,
+            title: truncate(c.title || c.conversation_id, 50),
+            preview: "",
+            createdAt: when,
+            updatedAt: when,
+          };
+        });
+      setConversations(merged);
+    }).catch(() => {});
     restored.current = true;
   }, []);
-
-  // Persist sidebar whenever it changes
-  useEffect(() => {
-    if (!restored.current) return;
-    saveConversations(conversations);
-  }, [conversations]);
 
   // Scroll to top of new message
   useEffect(() => {
@@ -168,15 +145,16 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
     }
   }, [queryFromUrl]);
 
-  const persistAndUpdateSidebar = useCallback((convId: string, msgs: ChatMessage[]) => {
-    saveMessages(convId, msgs);
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === convId
-          ? { ...c, preview: truncate(msgs.filter((m) => m.role === "assistant").pop()?.content ?? "", 80), updatedAt: new Date().toISOString() }
-          : c
-      )
-    );
+  const updateSidebarPreview = useCallback((convId: string, msgs: ChatMessage[]) => {
+    setConversations((prev) => {
+      const preview = truncate(msgs.filter((m) => m.role === "assistant").pop()?.content ?? "", 80);
+      const exists = prev.some((c) => c.id === convId);
+      const entry: ConversationSummary = exists
+        ? prev.find((c) => c.id === convId)!
+        : { id: convId, title: truncate(convId, 50), preview: "", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const updated = { ...entry, preview, updatedAt: new Date().toISOString() };
+      return exists ? prev.map((c) => (c.id === convId ? updated : c)) : [updated, ...prev];
+    });
   }, []);
 
   const sendMessage = useCallback(
@@ -207,12 +185,9 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
       setInput("");
       setLoading(true);
 
-      // Save user message immediately
-      if (convId) saveMessages(convId, newMessages);
-
       try {
         const history = newMessages.slice(0, -1).filter((m) => m.role === "user" || m.role === "assistant").map((m) => ({ role: m.role, content: m.content }));
-        const res = await chatApi.sendMessage(msg, history);
+        const res = await chatApi.sendMessage(msg, history, convId || undefined);
         const replyMsg: ChatMessage = {
           role: "assistant",
           content: res.data.reply,
@@ -223,7 +198,7 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
         };
         const allMsgs: ChatMessage[] = [...newMessages, replyMsg];
         setMessages(allMsgs);
-        if (convId) persistAndUpdateSidebar(convId, allMsgs);
+        if (convId) updateSidebarPreview(convId, allMsgs);
       } catch (error) {
         console.error("Chat error:", error);
         const isJobQuery = /job|internship|position|work|career opportunit/i.test(msg);
@@ -235,42 +210,43 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
         const fallbackMsg: ChatMessage = { role: "assistant", content: fallbackContent, showJobs, showCourses, jobs: showJobs ? [] : undefined, courses: showCourses ? [] : undefined };
         const allMsgs: ChatMessage[] = [...newMessages, fallbackMsg];
         setMessages(allMsgs);
-        if (convId) persistAndUpdateSidebar(convId, allMsgs);
+        if (convId) updateSidebarPreview(convId, allMsgs);
       } finally {
         setLoading(false);
       }
     },
-    [input, loading, messages, activeId, persistAndUpdateSidebar]
+    [input, loading, messages, activeId, updateSidebarPreview]
   );
 
   const switchConversation = (id: string) => {
-    if (activeId && activeId !== id) {
-      saveMessages(activeId, messages);
-    }
-    const saved = loadMessages(id);
-    if (saved) {
-      setMessages(saved);
-      prevMsgLen.current = saved.length;
-    } else {
-      setMessages([WELCOME_MESSAGE]);
-      prevMsgLen.current = 1;
-    }
     setActiveId(id);
     setInput("");
+    setSidebarOpen(false);
+    chatHistoryApi.get(id).then((res) => {
+      const msgs = res.data.messages || [];
+      if (msgs.length > 0) {
+        setMessages(msgs as ChatMessage[]);
+        prevMsgLen.current = msgs.length;
+      } else {
+        setMessages([WELCOME_MESSAGE]);
+        prevMsgLen.current = 1;
+      }
+    }).catch(() => {
+      setMessages([WELCOME_MESSAGE]);
+      prevMsgLen.current = 1;
+    });
   };
 
   const startNewChat = () => {
-    if (activeId) {
-      saveMessages(activeId, messages);
-    }
     setActiveId(null);
     setMessages([WELCOME_MESSAGE]);
     setInput("");
+    setSidebarOpen(false);
     prevMsgLen.current = 1;
   };
 
   const deleteConversation = (id: string) => {
-    removeMessages(id);
+    chatHistoryApi.clear(id).catch(() => {});
     setConversations((prev) => prev.filter((c) => c.id !== id));
     if (activeId === id) {
       setActiveId(null);
@@ -322,9 +298,33 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
         ))}
       </aside>
 
-      {/* Conversations sidebar */}
-      <aside className="hidden md:flex flex-col w-72 bg-surface border-r border-line shrink-0">
-        <div className="p-4 border-b border-line/50">
+      {/* Mobile drawer backdrop */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 top-16 bg-black/40 z-30"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Conversations sidebar (static on md+, slide-in drawer on mobile) */}
+      <aside
+        className={clsx(
+          "flex flex-col w-72 max-w-[85vw] bg-surface border-r border-line shrink-0",
+          "md:static md:translate-x-0 md:z-auto",
+          "fixed inset-y-0 top-16 left-0 z-40 transition-transform duration-200 md:transition-none",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="p-4 border-b border-line/50 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden p-2 -ml-1 text-ink/50 hover:text-ink"
+            aria-label="Close conversations"
+          >
+            <XIcon className="w-5 h-5" />
+          </button>
           <button type="button" onClick={startNewChat} className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-d text-white font-mono text-[11px] tracking-[0.1em] uppercase py-2.5 px-4 transition-colors">
             <Plus className="w-4 h-4" />
             New conversation
@@ -373,6 +373,26 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
 
       {/* Main chat */}
       <main className="flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-2 border-b border-line/60 bg-surface px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 -ml-2 text-ink/60 hover:text-ink"
+            aria-label="Open conversations"
+          >
+            <MenuIcon className="w-5 h-5" />
+          </button>
+          <span className="font-serif text-lg text-primary-dark">Career Coach</span>
+          <button
+            type="button"
+            onClick={startNewChat}
+            className="ml-auto p-2 -mr-2 text-primary hover:text-primary-d"
+            aria-label="New conversation"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-8">
           <div className="max-w-3xl mx-auto space-y-4">
             {showWelcome && (

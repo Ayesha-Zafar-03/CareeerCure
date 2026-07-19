@@ -9,10 +9,12 @@ type Provider = "google" | "linkedin";
 
 interface SocialLoginButtonsProps {
   emailFallbackLabel?: string;
+  googleOnly?: boolean;
 }
 
 export default function SocialLoginButtons({
   emailFallbackLabel = "email login",
+  googleOnly = false,
 }: SocialLoginButtonsProps) {
   const [statusLoading, setStatusLoading] = useState(true);
   const [backendUnreachable, setBackendUnreachable] = useState(false);
@@ -69,17 +71,19 @@ export default function SocialLoginButtons({
     window.location.href = `${API_URL}/api/auth/${provider}`;
   };
 
+  const linkedinEnabled = !googleOnly && linkedinConfigured;
+
   const socialUnavailable =
     !statusLoading &&
-    (backendUnreachable || (!googleConfigured && !linkedinConfigured));
+    (backendUnreachable || (!googleConfigured && !linkedinEnabled));
 
   const providerDisabled = (provider: Provider) => {
     if (statusLoading || redirecting !== null) return true;
     if (backendUnreachable) return true;
-    return provider === "google" ? !googleConfigured : !linkedinConfigured;
+    return provider === "google" ? !googleConfigured : !linkedinEnabled;
   };
 
-  if (!statusLoading && !googleConfigured && !linkedinConfigured && !backendUnreachable) {
+  if (!statusLoading && !googleConfigured && !linkedinEnabled && !backendUnreachable) {
     return null;
   }
 
@@ -90,13 +94,13 @@ export default function SocialLoginButtons({
       )}
 
       {message && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl">
+        <div className="bg-accent/5 border border-accent/20 text-accent-d text-sm px-4 py-3 rounded-xl">
           {message}
         </div>
       )}
 
       {socialUnavailable && !message && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm px-4 py-3 rounded-xl">
+        <div className="bg-primary/5 border border-primary/20 text-primary text-sm px-4 py-3 rounded-xl">
           {backendUnreachable
             ? "Social login requires the backend API. Start it on port 8000, then refresh."
             : `Social login is not configured yet. Use ${emailFallbackLabel} below.`}
@@ -148,6 +152,7 @@ export default function SocialLoginButtons({
             )}
           </button>
 
+          {!googleOnly && (
           <button
             type="button"
             onClick={() => handleSocialLogin("linkedin")}
@@ -163,18 +168,19 @@ export default function SocialLoginButtons({
           >
             {redirecting === "linkedin" ? (
               <>
-                <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                 Connecting to LinkedIn...
               </>
             ) : (
               <>
-                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                 </svg>
                 Continue with LinkedIn
               </>
             )}
           </button>
+          )}
         </>
       )}
     </div>

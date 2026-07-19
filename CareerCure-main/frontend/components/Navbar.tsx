@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { BriefcaseIcon, LogOutIcon, UserIcon, MenuIcon, XIcon } from "lucide-react";
+import { LogOutIcon, UserIcon, MenuIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
 
@@ -18,12 +18,11 @@ const NAV_LINKS = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    router.push("/");
+    window.location.href = "/";
   };
 
   return (
@@ -31,10 +30,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href={user ? "/dashboard" : "/"} className="flex items-center gap-2 group">
-            <div className="bg-primary p-1.5 rounded-lg transition-transform group-hover:scale-105">
-              <BriefcaseIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-primary-dark">CareerCure</span>
+            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
           </Link>
 
           {user && (

@@ -29,8 +29,6 @@ interface ChatWidgetProps {
   hideFab?: boolean;
 }
 
-const STORAGE_KEY = "chat-widget-history";
-
 export default function ChatWidget({ hideFab = false }: ChatWidgetProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -43,28 +41,22 @@ export default function ChatWidget({ hideFab = false }: ChatWidgetProps) {
   const prevLen = useRef(1);
   const restored = useRef(false);
 
-  // Restore
+  // Restore — load persisted backend history (session-scoped)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 1) {
-          setMessages(parsed);
-          prevLen.current = parsed.length;
+    let cancelled = false;
+    import("@/lib/api").then(({ chatHistoryApi }) => {
+      chatHistoryApi.get().then((res) => {
+        if (cancelled) return;
+        const msgs = res.data.messages || [];
+        if (msgs.length > 0) {
+          setMessages(msgs);
+          prevLen.current = msgs.length;
         }
-      }
-    } catch {}
-    restored.current = true;
+        restored.current = true;
+      }).catch(() => { restored.current = true; });
+    }).catch(() => { restored.current = true; });
+    return () => { cancelled = true; };
   }, []);
-
-  // Save (after restore)
-  useEffect(() => {
-    if (!restored.current) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch {}
-  }, [messages]);
 
   // Scroll to top of last new message
   useEffect(() => {
@@ -115,14 +107,14 @@ export default function ChatWidget({ hideFab = false }: ChatWidgetProps) {
     setMessages([{ role: "assistant", content: "Hi! I'm your Career Coach. Ask about careers, CVs, courses, or jobs." }]);
     setInput("");
     prevLen.current = 1;
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    import("@/lib/api").then(({ chatHistoryApi }) => chatHistoryApi.clear().catch(() => {})).catch(() => {});
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-4 sm:right-6 z-50">
       {/* Chat panel */}
       {open && (
-        <div className="mb-4 w-[360px] max-w-[calc(100vw-3rem)] bg-white border border-line/60 shadow-xl flex flex-col overflow-hidden rounded-xl max-h-[70vh]" style={{ height: "520px" }}>
+        <div className="mb-4 w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[70vh] bg-white border border-line/60 shadow-xl flex flex-col overflow-hidden rounded-xl">
           {/* Header */}
           <div className="bg-primary px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

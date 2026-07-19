@@ -1,6 +1,16 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+import logging
 import os
+
+logger = logging.getLogger(__name__)
+
+INSECURE_SECRET_KEYS = {
+    "change-this-secret-key-in-production",
+    "careercure-super-secret-key-fyp-2024",
+    "your-super-secret-key-change-this",
+    "CHANGE_ME_GENERATE_A_LONG_RANDOM_STRING",
+}
 
 
 class Settings(BaseSettings):
@@ -71,7 +81,15 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings()
+    _settings = Settings()
+    if _settings.SECRET_KEY in INSECURE_SECRET_KEYS or len(_settings.SECRET_KEY) < 32:
+        if not _settings.DEBUG:
+            raise RuntimeError(
+                "SECRET_KEY is insecure or too short. Set a strong random SECRET_KEY "
+                "in .env (e.g. `python -c \"import secrets; print(secrets.token_urlsafe(64))\"`)."
+            )
+        logger.warning("Using an insecure SECRET_KEY. This is only allowed while DEBUG=True.")
+    return _settings
 
 
 settings = get_settings()

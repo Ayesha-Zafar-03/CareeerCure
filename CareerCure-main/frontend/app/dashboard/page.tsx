@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { profileApi } from "@/lib/api";
+import { profileApi, planApi } from "@/lib/api";
 import {
   FileTextIcon, MapIcon, BriefcaseIcon, MessageCircleIcon,
-  ArrowRightIcon, BookOpenIcon, CompassIcon, BarChart3, PieChart,
+  ArrowRightIcon, BookOpenIcon, CompassIcon, PieChart,
   BookCheck, Plus, Trash2
 } from "lucide-react";
 import Link from "next/link";
@@ -20,19 +20,10 @@ const QUICK_ACTIONS = [
   { icon: MessageCircleIcon, title: "Career Coach", desc: "Get AI career advice", href: "/chat" },
 ];
 
-const SKILL_CATEGORIES = [
-  { label: "Programming", value: 80 },
-  { label: "Frontend", value: 65 },
-  { label: "Backend", value: 55 },
-  { label: "Database", value: 45 },
-  { label: "Cloud", value: 35 },
-];
-
 export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [plannedCourses, setPlannedCourses] = useState<any[]>([]);
-  const [barHeights, setBarHeights] = useState(SKILL_CATEGORIES.map(() => 0));
   const [donutOffset, setDonutOffset] = useState(283);
 
   useEffect(() => {
@@ -43,37 +34,31 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem("planned-courses");
-    if (stored) {
-      try { setPlannedCourses(JSON.parse(stored)); } catch { setPlannedCourses([]); }
-    }
+    planApi.list().then((res) => {
+      setPlannedCourses(res.data.courses || []);
+    }).catch(() => {});
   }, []);
 
   const hasCv = !!profile?.profile?.has_cv;
   const hasGoal = !!profile?.profile?.career_goal;
-  const skillCount = profile?.profile?.skills?.length || 0;
+  const skills = profile?.profile?.skills || [];
+  const skillCount = skills.length;
   const completion = hasCv && hasGoal ? 100 : hasCv || hasGoal ? 60 : 25;
 
   useEffect(() => {
     if (!loading) {
-      const barTimer = setTimeout(() => {
-        setBarHeights(SKILL_CATEGORIES.map((c) => c.value));
-      }, 300);
       const circumference = 2 * Math.PI * 45;
       const donutTimer = setTimeout(() => {
         setDonutOffset(circumference - (completion / 100) * circumference);
       }, 500);
-      return () => {
-        clearTimeout(barTimer);
-        clearTimeout(donutTimer);
-      };
+      return () => clearTimeout(donutTimer);
     }
   }, [loading]);
 
   const removeFromPlan = (id: number) => {
     const updated = plannedCourses.filter((c: any) => c.id !== id);
     setPlannedCourses(updated);
-    localStorage.setItem("planned-courses", JSON.stringify(updated));
+    planApi.remove(id).catch(() => {});
   };
 
   const nextSteps = [
@@ -176,30 +161,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Stats Graph */}
-              <div className="mb-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Bar Chart */}
-                <div className="bg-surface border border-line px-5 sm:px-6 py-6 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-                  <div className="flex items-center gap-2 mb-6">
-                    <BarChart3 className="w-4 h-4 text-primary" />
-                    <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-ink/40">
-                      Skills Distribution
-                    </p>
-                  </div>
-                  <div className="flex items-end gap-3" style={{ height: 140 }}>
-                    {SKILL_CATEGORIES.map((cat, i) => (
-                      <div key={cat.label} className="flex flex-col items-center gap-2 flex-1">
-                        <div
-                          className="w-full max-w-10 bg-primary rounded-t transition-all duration-1000 ease-out"
-                          style={{ height: `${barHeights[i]}px` }}
-                        />
-                        <span className="font-mono text-[9px] tracking-[0.05em] text-ink/40 text-center">
-                          {cat.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+              <div className="mb-10">
                 {/* Donut Chart */}
                 <div className="bg-surface border border-line px-5 sm:px-6 py-6 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
                   <div className="flex items-center gap-2 mb-6">
@@ -366,7 +328,7 @@ export default function DashboardPage() {
                         <p className="text-[13px] text-ink/50">Skills</p>
                         <p className="text-primary-dark mt-1">{skillCount} skills added</p>
                       </div>
-                      <Link href="/profile" className="font-mono text-[11px] tracking-[0.08em] uppercase text-primary hover:underline underline-offset-2 transition-all duration-200">
+                      <Link href="/cv" className="font-mono text-[11px] tracking-[0.08em] uppercase text-primary hover:underline underline-offset-2 transition-all duration-200">
                         Edit
                       </Link>
                     </div>

@@ -1,12 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { 
-  BriefcaseIcon, ArrowLeftIcon, SearchIcon, UserCheckIcon, 
-  UserXIcon, CrownIcon, MailIcon, CalendarIcon, ShieldIcon,
-  MoreVerticalIcon, CheckCircleIcon, XCircleIcon
+import {
+  SearchIcon, MailIcon, CalendarIcon, ShieldIcon, CrownIcon,
+  CheckCircleIcon, XCircleIcon, RefreshCwIcon, Trash2Icon,
 } from "lucide-react";
 
 interface User {
@@ -20,280 +17,177 @@ interface User {
   created_at: string;
 }
 
-export default function UserManagement() {
+export default function UsersPage() {
   const { token } = useAuth();
-  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [q, setQ] = useState("");
   const [updating, setUpdating] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ t: "s" | "e"; m: string } | null>(null);
 
-  useEffect(() => {
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    
-    fetchUsers();
-  }, [token, router]);
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const fetchUsers = async () => {
+  useEffect(() => { if (token) load(); }, [token]);
+
+  const load = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const data = await response.json();
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    } finally {
-      setLoading(false);
-    }
+      const r = await fetch(`${API}/api/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) setUsers(await r.json());
+    } catch {} finally { setLoading(false); }
   };
 
-  const updateUser = async (userId: number, updates: Partial<User>) => {
-    setUpdating(userId);
+  const toastFn = (t: "s" | "e", m: string) => { setToast({ t, m }); setTimeout(() => setToast(null), 2500); };
+
+  const toggleActive = async (u: User) => {
+    setUpdating(u.id);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
+      const r = await fetch(`${API}/api/admin/users/${u.id}`, {
+        method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !u.is_active }),
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to update user');
-      }
-
-      await fetchUsers();
-    } catch (err) {
-      console.error('Error updating user:', err);
-      alert(`Error: ${err}`);
-    } finally {
-      setUpdating(null);
-    }
+      if (r.ok) { toastFn("s", u.is_active ? "Deactivated" : "Activated"); load(); }
+      else toastFn("e", "Failed");
+    } catch { toastFn("e", "Error"); } finally { setUpdating(null); }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.full_name.toLowerCase().includes(searchQuery.toLowerCase())
+  const makeAdmin = async (u: User) => {
+    setUpdating(u.id);
+    try {
+      const r = await fetch(`${API}/api/admin/users/${u.id}`, {
+        method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ is_admin: true }),
+      });
+      if (r.ok) { toastFn("s", "Made admin"); load(); }
+      else toastFn("e", "Failed");
+    } catch { toastFn("e", "Error"); } finally { setUpdating(null); }
+  };
+
+  const hardDelete = async (u: User) => {
+    if (!confirm(`Permanently delete ${u.full_name}? This cannot be undone.`)) return;
+    setUpdating(u.id);
+    try {
+      const r = await fetch(`${API}/api/admin/users/${u.id}?hard=true`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) { toastFn("s", "Deleted permanently"); load(); }
+      else toastFn("e", "Failed");
+    } catch { toastFn("e", "Error"); } finally { setUpdating(null); }
+  };
+
+  const filtered = users.filter(u =>
+    u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase())
   );
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-ink/60">Loading users...</p>
-        </div>
-      </div>
-    );
-  }
+  const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
-    <div className="min-h-screen bg-paper">
-      {/* Header */}
-      <div className="bg-surface border-b border-line">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/admin" className="flex items-center gap-2 text-ink/60 hover:text-primary-dark">
-                <ArrowLeftIcon className="w-5 h-5" />
-                <span className="text-sm font-medium">Back to Admin</span>
-              </Link>
-              <div className="h-6 w-px bg-line"></div>
-              <Link href="/" className="flex items-center gap-2">
-                <div className="bg-blue-600 p-2 rounded-xl">
-                  <BriefcaseIcon className="w-6 h-6 text-white" />
-                </div>
-                <span className="font-bold text-xl text-primary-dark">CareerCure</span>
-              </Link>
-            </div>
-          </div>
+    <div className="space-y-5">
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-white shadow-lg ${toast.t === "s" ? "bg-navy" : "bg-red-600"}`}>
+          {toast.t === "s" ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />}
+          {toast.m}
         </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-navy">Users</h1>
+          <p className="text-xs text-navy/40 mt-0.5">{users.length} accounts</p>
+        </div>
+        <button onClick={load} className="btn-secondary flex items-center gap-1.5">
+          <RefreshCwIcon className="w-3.5 h-3.5" /> Refresh
+        </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-8 animate-fade-in-up">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-dark mb-2">User Management</h1>
-            <p className="text-ink/60">Manage all registered users ({users.length} total)</p>
-          </div>
-        </div>
+      <div className="relative max-w-xs">
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-navy/30" />
+        <input type="text" placeholder="Search users..." value={q} onChange={e => setQ(e.target.value)} className="input pl-9" />
+      </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Users Table */}
-        <div className="bg-surface rounded-xl shadow-sm border border-line overflow-hidden animate-fade-in-up">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-paper border-b border-line">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">Auth Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">Joined</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-ink/50 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-primary/5">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-medium text-sm">
-                            {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-primary-dark">{user.full_name}</div>
-                          <div className="text-sm text-ink/50 flex items-center gap-1">
-                            <MailIcon className="w-4 h-4" />
-                            {user.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          {user.is_active ? (
-                            <span className="flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded-full">
-                              <CheckCircleIcon className="w-3 h-3" />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                              <XCircleIcon className="w-3 h-3" />
-                              Inactive
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          {user.is_verified ? (
-                            <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                              <ShieldIcon className="w-3 h-3" />
-                              Verified
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-                              Unverified
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.is_admin ? (
-                        <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                          <CrownIcon className="w-3 h-3" />
-                          Admin
+      <div className="card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-cream-200">
+                <th className="px-4 py-2.5 text-left text-[11px] font-medium text-navy/40 uppercase tracking-wider">User</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-medium text-navy/40 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-medium text-navy/40 uppercase tracking-wider hidden md:table-cell">Role</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-medium text-navy/40 uppercase tracking-wider hidden lg:table-cell">Joined</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-medium text-navy/40 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={5} className="px-4 py-12 text-center text-navy/30 text-xs">Loading...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={5} className="px-4 py-12 text-center text-navy/30 text-xs">No users found</td></tr>
+              ) : filtered.map(u => (
+                <tr key={u.id} className="table-row">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 bg-cream-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-navy/40 font-medium text-[10px]">
+                          {u.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
                         </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-navy truncate text-[13px]">{u.full_name}</p>
+                        <p className="text-[11px] text-navy/30 flex items-center gap-1 truncate">
+                          <MailIcon className="w-3 h-3 flex-shrink-0" /> {u.email}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      {u.is_active ? (
+                        <span className="badge bg-green-50 text-green-700 w-fit"><CheckCircleIcon className="w-3 h-3 mr-1" />Active</span>
                       ) : (
-                        <span className="px-2 py-1 bg-primary/10 text-ink text-xs font-medium rounded-full">
-                          User
-                        </span>
+                        <span className="badge bg-red-50 text-red-600 w-fit"><XCircleIcon className="w-3 h-3 mr-1" />Inactive</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.oauth_provider ? (
-                        <span className="capitalize px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                          {user.oauth_provider}
-                        </span>
+                      {u.is_verified ? (
+                        <span className="badge bg-blue-50 text-blue-600 w-fit"><ShieldIcon className="w-3 h-3 mr-1" />Verified</span>
                       ) : (
-                        <span className="px-2 py-1 bg-primary/10 text-ink text-xs font-medium rounded-full">
-                          Email
-                        </span>
+                        <span className="badge bg-yellow-50 text-yellow-600 w-fit">Unverified</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-ink/50">
-                      <div className="flex items-center gap-1">
-                        <CalendarIcon className="w-4 h-4" />
-                        {formatDate(user.created_at)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {updating === user.id ? (
-                          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => updateUser(user.id, { is_active: !user.is_active })}
-                              className={`px-2 py-1 text-xs font-medium rounded ${
-                                user.is_active 
-                                  ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                                  : 'bg-accent/10 text-accent hover:bg-accent/20'
-                              } transition-colors`}
-                            >
-                              {user.is_active ? 'Deactivate' : 'Activate'}
-                            </button>
-                            {!user.is_admin && (
-                              <button
-                                onClick={() => updateUser(user.id, { is_admin: true })}
-                                className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors"
-                              >
-                                Make Admin
-                              </button>
-                            )}
-                          </>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    {u.is_admin ? (
+                      <span className="badge bg-red-50 text-red-600 w-fit"><CrownIcon className="w-3 h-3 mr-1" />Admin</span>
+                    ) : (
+                      <span className="badge bg-cream-100 text-navy/40 w-fit">User</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <span className="flex items-center gap-1 text-[11px] text-navy/30">
+                      <CalendarIcon className="w-3 h-3" /> {fmt(u.created_at)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {updating === u.id ? (
+                      <div className="w-4 h-4 border-2 border-navy/20 border-t-navy rounded-full animate-spin" />
+                    ) : (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button onClick={() => toggleActive(u)} className={`text-[11px] font-medium px-2 py-1 rounded transition-colors ${u.is_active ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-700 hover:bg-green-100"}`}>
+                          {u.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                        {!u.is_admin && (
+                          <button onClick={() => makeAdmin(u)} className="text-[11px] font-medium px-2 py-1 rounded bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors">
+                            Make Admin
+                          </button>
                         )}
+                        <button onClick={() => hardDelete(u)} className="text-[11px] font-medium px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Delete permanently">
+                          <Trash2Icon className="w-3 h-3" />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8">
-              <div className="text-ink/40 mb-2">No users found</div>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-blue-600 hover:text-blue-700 text-sm"
-                >
-                  Clear search
-                </button>
-              )}
-            </div>
-          )}
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

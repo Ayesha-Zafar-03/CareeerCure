@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
@@ -96,13 +96,13 @@ export default function ForgotPasswordPage() {
           </Link>
           {step === "email" ? (
             <>
-              <h1 className="mt-6 text-2xl font-bold text-gray-900">Forgot your password?</h1>
-              <p className="mt-1 text-sm text-gray-500">Enter your email and we&apos;ll send a reset code</p>
+              <h1 className="mt-6 text-2xl font-bold text-primary-dark">Forgot your password?</h1>
+              <p className="mt-1 text-sm text-ink/50">Enter your email and we&apos;ll send a reset code</p>
             </>
           ) : (
             <>
-              <h1 className="mt-6 text-2xl font-bold text-gray-900">Check your email</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="mt-6 text-2xl font-bold text-primary-dark">Check your email</h1>
+              <p className="mt-1 text-sm text-ink/50">
                 We sent a 6-digit reset code to <strong>{email}</strong>
               </p>
             </>
@@ -130,9 +130,9 @@ export default function ForgotPasswordPage() {
           {/* ── Step 2: OTP input ── */}
           {step === "otp" && (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
-              <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 px-4 py-3 rounded-lg">
-                <MailIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
-                <p className="text-sm text-orange-700">
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 px-4 py-3 rounded-lg">
+                <MailIcon className="w-5 h-5 text-primary flex-shrink-0" />
+                <p className="text-sm text-primary-dark">
                   Check your Gmail inbox for the reset code. It expires in 10 minutes.
                 </p>
               </div>
@@ -142,8 +142,8 @@ export default function ForgotPasswordPage() {
               )}
 
               {resent && (
-                <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">
-                  <CheckCircleIcon className="w-4 h-4" />
+                <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 text-primary-dark text-sm px-4 py-3 rounded-lg">
+                  <CheckCircleIcon className="w-4 h-4 text-primary" />
                   New code sent to your email!
                 </div>
               )}
@@ -157,8 +157,8 @@ export default function ForgotPasswordPage() {
                       type="text" inputMode="numeric" maxLength={1} value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg
-                                 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition"
+                      className="w-10 h-12 sm:w-12 text-center text-xl font-bold border-2 border-line rounded-lg
+                                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
                       aria-label={`Digit ${i + 1}`}
                     />
                   ))}
@@ -169,17 +169,17 @@ export default function ForgotPasswordPage() {
                 Continue to Reset Password →
               </button>
 
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-ink/50">
                 Didn&apos;t receive the code?{" "}
                 <button type="button" onClick={handleResend} disabled={resending}
-                  className="text-primary-600 hover:underline font-medium disabled:opacity-50">
+                  className="text-primary hover:underline font-medium disabled:opacity-50">
                   {resending ? "Sending..." : "Resend code"}
                 </button>
               </div>
 
               <div className="text-center">
                 <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(["","","","","",""]); }}
-                  className="text-xs text-gray-400 hover:text-gray-600">
+                  className="text-xs text-ink/40 hover:text-ink/60">
                   ← Change email address
                 </button>
               </div>
@@ -187,7 +187,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <div className="mt-4 text-center">
-            <Link href="/login" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <Link href="/login" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-ink/70">
               <ArrowLeftIcon className="w-3 h-3" />
               Back to login
             </Link>

@@ -37,16 +37,32 @@ CAREER_PATHS = [
 ]
 
 INTERNSHIPS = [
-    {"title": "Data Science Intern", "company": "TechCorp", "description": "Work on real-world ML projects using Python and scikit-learn. Analyse large datasets and build predictive models.", "required_skills": ["Python", "Machine Learning", "Pandas", "SQL"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://careers.techcorp.com/data-science-intern", "salary_range": "$800-1200/month", "remote_option": "Hybrid"},
-    {"title": "Backend Developer Intern", "company": "StartupHub", "description": "Build REST APIs using FastAPI and PostgreSQL. Work in an agile team on a SaaS product.", "required_skills": ["Python", "FastAPI", "PostgreSQL", "Git"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://startuphub.com/careers/backend-intern", "salary_range": "$600-1000/month", "remote_option": "On-site"},
-    {"title": "Frontend Developer Intern", "company": "DigitalAgency", "description": "Develop responsive web interfaces using React and Tailwind CSS. Collaborate with designers.", "required_skills": ["React", "JavaScript", "Tailwind CSS", "HTML/CSS"], "location": "Islamabad, Pakistan", "duration": "2 months", "application_url": "https://digitalagency.pk/apply-frontend", "salary_range": "$500-800/month", "remote_option": "Hybrid"},
-    {"title": "Machine Learning Intern", "company": "AI Solutions Ltd", "description": "Implement and fine-tune deep learning models for computer vision tasks using PyTorch.", "required_skills": ["Python", "PyTorch", "Computer Vision", "NumPy"], "location": "Remote", "duration": "4 months", "application_url": "https://aisolutions.com/join-us/ml-intern", "salary_range": "$1000-1500/month", "remote_option": "Remote"},
-    {"title": "DevOps Intern", "company": "CloudBase", "description": "Set up CI/CD pipelines, manage Docker containers, and assist with AWS infrastructure.", "required_skills": ["Docker", "AWS", "CI/CD", "Linux", "Git"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://cloudbase.pk/careers/devops", "salary_range": "$700-1100/month", "remote_option": "Hybrid"},
-    {"title": "Full Stack Intern", "company": "WebWorks", "description": "Build features across the full stack using Next.js and Node.js. Work on a live e-commerce platform.", "required_skills": ["Next.js", "Node.js", "PostgreSQL", "TypeScript"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://webworks.com/internship-program", "salary_range": "$800-1200/month", "remote_option": "Hybrid"},
-    {"title": "Cybersecurity Intern", "company": "SecureNet", "description": "Assist with vulnerability assessments, penetration testing, and security audits.", "required_skills": ["Network Security", "Linux", "Python", "Penetration Testing"], "location": "Islamabad, Pakistan", "duration": "3 months", "application_url": "https://securenet.pk/careers/security-intern", "salary_range": "$900-1300/month", "remote_option": "On-site"},
-    {"title": "Mobile App Intern (Android)", "company": "AppFactory", "description": "Develop Android features using Kotlin and Jetpack Compose for a fintech application.", "required_skills": ["Kotlin", "Android SDK", "Jetpack Compose", "REST APIs"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://appfactory.com/jobs/android-intern", "salary_range": "$700-1000/month", "remote_option": "On-site"},
-    {"title": "UI/UX Design Intern", "company": "CreativeStudio", "description": "Design user flows, wireframes, and high-fidelity prototypes in Figma for mobile and web apps.", "required_skills": ["Figma", "Wireframing", "Prototyping", "User Research"], "location": "Remote", "duration": "2 months", "application_url": "https://creativestudio.design/intern", "salary_range": "$400-600/month", "remote_option": "Remote"},
-    {"title": "Data Engineering Intern", "company": "DataFlow Inc", "description": "Build ETL pipelines using Apache Airflow and process large datasets on AWS.", "required_skills": ["Python", "SQL", "Apache Airflow", "AWS", "ETL"], "location": "Remote", "duration": "4 months", "application_url": "https://dataflow.inc/careers/data-eng", "salary_range": "$1100-1600/month", "remote_option": "Remote"},
+    {"title": "Data Science Intern", "company": "TechCorp", "description": "Work on real-world ML projects using Python and scikit-learn. Analyse large datasets and build predictive models.", "required_skills": ["Python", "Machine Learning", "Pandas", "SQL"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/data-science-intern", "salary_range": "", "remote_option": "Hybrid"},
+    {"title": "Backend Developer Intern", "company": "StartupHub", "description": "Build REST APIs using FastAPI and PostgreSQL. Work in an agile team on a SaaS product.", "required_skills": ["Python", "FastAPI", "PostgreSQL", "Git"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/backend-developer-intern", "salary_range": "", "remote_option": "On-site"},
+    {"title": "Frontend Developer Intern", "company": "DigitalAgency", "description": "Develop responsive web interfaces using React and Tailwind CSS. Collaborate with designers.", "required_skills": ["React", "JavaScript", "Tailwind CSS", "HTML/CSS"], "location": "Islamabad, Pakistan", "duration": "2 months", "application_url": "https://www.rozee.pk/job/jsearch/q/frontend-developer-intern", "salary_range": "", "remote_option": "Hybrid"},
+    {"title": "Machine Learning Intern", "company": "AI Solutions Ltd", "description": "Implement and fine-tune deep learning models for computer vision tasks using PyTorch.", "required_skills": ["Python", "PyTorch", "Computer Vision", "NumPy"], "location": "Remote", "duration": "4 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=Machine+Learning+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+    {"title": "DevOps Intern", "company": "CloudBase", "description": "Set up CI/CD pipelines, manage Docker containers, and assist with AWS infrastructure.", "required_skills": ["Docker", "AWS", "CI/CD", "Linux", "Git"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/devops-intern", "salary_range": "", "remote_option": "Hybrid"},
+    {"title": "Full Stack Intern", "company": "WebWorks", "description": "Build features across the full stack using Next.js and Node.js. Work on a live e-commerce platform.", "required_skills": ["Next.js", "Node.js", "PostgreSQL", "TypeScript"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/full-stack-intern", "salary_range": "", "remote_option": "Hybrid"},
+    {"title": "Cybersecurity Intern", "company": "SecureNet", "description": "Assist with vulnerability assessments, penetration testing, and security audits.", "required_skills": ["Network Security", "Linux", "Python", "Penetration Testing"], "location": "Islamabad, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/cybersecurity-intern", "salary_range": "", "remote_option": "On-site"},
+    {"title": "Mobile App Intern (Android)", "company": "AppFactory", "description": "Develop Android features using Kotlin and Jetpack Compose for a fintech application.", "required_skills": ["Kotlin", "Android SDK", "Jetpack Compose", "REST APIs"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/mobile-app-intern-android", "salary_range": "", "remote_option": "On-site"},
+    {"title": "UI/UX Design Intern", "company": "CreativeStudio", "description": "Design user flows, wireframes, and high-fidelity prototypes in Figma for mobile and web apps.", "required_skills": ["Figma", "Wireframing", "Prototyping", "User Research"], "location": "Remote", "duration": "2 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=UI%2FUX+Design+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+    {"title": "Data Engineering Intern", "company": "DataFlow Inc", "description": "Build ETL pipelines using Apache Airflow and process large datasets on AWS.", "required_skills": ["Python", "SQL", "Apache Airflow", "AWS", "ETL"], "location": "Remote", "duration": "4 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=Data+Engineering+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+
+    # ── Medical & Health professions ──
+    {"title": "Clinical Research Intern", "company": "City General Hospital", "description": "Support clinical trials and patient data collection. Assist researchers with study coordination, consent forms, and medical record review under supervision.", "required_skills": ["Biology", "Clinical Research", "Data Entry", "Medical Terminology", "Attention to Detail"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/clinical-research-intern", "salary_range": "", "remote_option": "On-site"},
+    {"title": "Medical Assistant Intern", "company": "CarePlus Clinic", "description": "Shadow physicians and assist with patient intake, vitals, and electronic health records. Learn clinical workflows in a primary care setting.", "required_skills": ["Anatomy", "Patient Care", "Communication", "Medical Terminology", "Empathy"], "location": "Karachi, Pakistan", "duration": "2 months", "application_url": "https://www.rozee.pk/job/jsearch/q/medical-assistant-intern", "salary_range": "", "remote_option": "On-site"},
+    {"title": "Public Health Intern", "company": "Health For All NGO", "description": "Work on community health campaigns, epidemiology data analysis, and vaccination outreach programs in underserved areas.", "required_skills": ["Public Health", "Epidemiology", "Data Analysis", "Community Outreach", "Report Writing"], "location": "Remote", "duration": "3 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=Public+Health+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+    {"title": "Pharmacy Intern", "company": "MediLife Pharmacy", "description": "Assist licensed pharmacists with dispensing, inventory, and patient counselling. Learn pharmaceutical standards and drug safety.", "required_skills": ["Pharmacology", "Chemistry", "Attention to Detail", "Communication", "Regulatory Knowledge"], "location": "Islamabad, Pakistan", "duration": "4 months", "application_url": "https://www.rozee.pk/job/jsearch/q/pharmacy-intern", "salary_range": "", "remote_option": "On-site"},
+
+    # ── Business, Finance & Marketing ──
+    {"title": "Marketing Intern", "company": "BrightBrands", "description": "Plan social media campaigns, create content, and analyse engagement metrics for consumer brands. Learn digital marketing fundamentals.", "required_skills": ["Marketing", "Social Media", "Content Writing", "Canva", "Analytics"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/marketing-intern", "salary_range": "", "remote_option": "Hybrid"},
+    {"title": "Finance Intern", "company": "Summit Capital", "description": "Support financial modeling, market research, and portfolio reporting. Assist analysts with Excel-based valuations and pitch decks.", "required_skills": ["Finance", "Excel", "Financial Modeling", "Accounting", "Data Analysis"], "location": "Lahore, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/finance-intern", "salary_range": "", "remote_option": "On-site"},
+    {"title": "Business Analyst Intern", "company": "GrowthPartners", "description": "Gather business requirements, analyse processes, and produce insights that help clients improve operations and strategy.", "required_skills": ["Business Analysis", "SQL", "Power BI", "Communication", "Problem Solving"], "location": "Remote", "duration": "3 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=Business+Analyst+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+    {"title": "Human Resources Intern", "company": "PeopleFirst Ltd", "description": "Help with recruitment, onboarding, and HR operations. Learn talent sourcing, interview coordination, and employee engagement.", "required_skills": ["Recruitment", "Communication", "Organization", "HR Operations", "Empathy"], "location": "Islamabad, Pakistan", "duration": "2 months", "application_url": "https://www.rozee.pk/job/jsearch/q/human-resources-intern", "salary_range": "", "remote_option": "Hybrid"},
+
+    # ── Design, Media & Creative ──
+    {"title": "Graphic Design Intern", "company": "StudioPixel", "description": "Create social media graphics, brand assets, and marketing visuals using Adobe Photoshop and Illustrator for real clients.", "required_skills": ["Graphic Design", "Adobe Photoshop", "Illustrator", "Creativity", "Branding"], "location": "Remote", "duration": "2 months", "application_url": "https://www.linkedin.com/jobs/search/?keywords=Graphic+Design+Intern&f_WT=2", "salary_range": "", "remote_option": "Remote"},
+    {"title": "Video Editing Intern", "company": "MediaWave", "description": "Edit short-form videos and reels using Premiere Pro and After Effects. Support the content team with post-production.", "required_skills": ["Video Editing", "Premiere Pro", "After Effects", "Storytelling", "Motion Graphics"], "location": "Karachi, Pakistan", "duration": "3 months", "application_url": "https://www.rozee.pk/job/jsearch/q/video-editing-intern", "salary_range": "", "remote_option": "Hybrid"},
 ]
 
 COURSES = [
@@ -259,7 +275,109 @@ COURSES = [
         "course_url": "https://www.coursera.org/learn/tableau-desktop-specialist",
         "rating": 4.5,
         "category": "Data Science"
-    }
+    },
+
+    # ── Medical & Health courses ──
+    {
+        "title": "Introduction to Human Anatomy",
+        "provider": "Coursera",
+        "instructor": "University of Michigan",
+        "description": "Learn the foundational structure of the human body — skeletal, muscular, nervous, and cardiovascular systems — for aspiring medical and health students.",
+        "required_skills": [],
+        "skills_gained": ["Anatomy", "Physiology", "Medical Terminology", "Biology", "Health Sciences"],
+        "difficulty_level": "Beginner",
+        "duration": "6 weeks",
+        "price": "Free (certificate $49)",
+        "course_url": "https://www.coursera.org/learn/human-anatomy",
+        "rating": 4.8,
+        "category": "Health & Medicine"
+    },
+    {
+        "title": "Clinical Research: Behind the Statistics",
+        "provider": "Coursera",
+        "instructor": "University of Cape Town",
+        "description": "Understand the statistical methods behind clinical trials and medical research. Learn to read and interpret study results confidently.",
+        "required_skills": ["Basic statistics"],
+        "skills_gained": ["Clinical Research", "Biostatistics", "Epidemiology", "Data Analysis", "Research Methods"],
+        "difficulty_level": "Intermediate",
+        "duration": "5 weeks",
+        "price": "Free (certificate $49)",
+        "course_url": "https://www.coursera.org/learn/clinical-research",
+        "rating": 4.7,
+        "category": "Health & Medicine"
+    },
+    {
+        "title": "Public Health Primer",
+        "provider": "edX",
+        "instructor": "Johns Hopkins University",
+        "description": "Explore the core of public health: epidemiology, biostatistics, health policy, and prevention. Ideal for future doctors and health professionals.",
+        "required_skills": [],
+        "skills_gained": ["Public Health", "Epidemiology", "Health Policy", "Prevention", "Community Health"],
+        "difficulty_level": "Beginner",
+        "duration": "8 weeks",
+        "price": "Free (certificate $99)",
+        "course_url": "https://www.edx.org/course/public-health",
+        "rating": 4.7,
+        "category": "Health & Medicine"
+    },
+
+    # ── Business, Finance & Marketing courses ──
+    {
+        "title": "Digital Marketing Specialization",
+        "provider": "Coursera",
+        "instructor": "University of Illinois",
+        "description": "Master SEO, social media, 3D printing of campaigns, and analytics. Build a real marketing plan for a product or brand.",
+        "required_skills": [],
+        "skills_gained": ["Digital Marketing", "SEO", "Social Media", "Google Analytics", "Content Strategy"],
+        "difficulty_level": "Beginner",
+        "duration": "6 months",
+        "price": "Free (certificate $49/month)",
+        "course_url": "https://www.coursera.org/specializations/digital-marketing",
+        "rating": 4.6,
+        "category": "Marketing"
+    },
+    {
+        "title": "Introduction to Finance and Accounting",
+        "provider": "Coursera",
+        "instructor": "University of Pennsylvania (Wharton)",
+        "description": "Learn the fundamentals of corporate finance, financial statements, and valuation. Great for aspiring finance and business analysts.",
+        "required_skills": [],
+        "skills_gained": ["Finance", "Accounting", "Financial Modeling", "Excel", "Valuation"],
+        "difficulty_level": "Beginner",
+        "duration": "4 weeks",
+        "price": "Free (certificate $49)",
+        "course_url": "https://www.coursera.org/learn/introduction-finance-accounting",
+        "rating": 4.7,
+        "category": "Business & Finance"
+    },
+    {
+        "title": "Business Analytics with Excel",
+        "provider": "Coursera",
+        "instructor": "Wharton School",
+        "description": "Use Excel and data analysis to make better business decisions. Cover descriptive, predictive, and prescriptive analytics.",
+        "required_skills": ["Basic Excel"],
+        "skills_gained": ["Business Analysis", "Excel", "Data Analysis", "Decision Making", "Forecasting"],
+        "difficulty_level": "Intermediate",
+        "duration": "4 weeks",
+        "price": "Free (certificate $49)",
+        "course_url": "https://www.coursera.org/learn/wharton-business-analytics",
+        "rating": 4.6,
+        "category": "Business & Finance"
+    },
+    {
+        "title": "Fundamentals of Graphic Design",
+        "provider": "Coursera",
+        "instructor": "California Institute of the Arts",
+        "description": "Learn the core principles of graphic design: typography, colour theory, layout, and composition. Build a portfolio of visual work.",
+        "required_skills": [],
+        "skills_gained": ["Graphic Design", "Typography", "Colour Theory", "Layout", "Branding"],
+        "difficulty_level": "Beginner",
+        "duration": "4 weeks",
+        "price": "Free (certificate $49)",
+        "course_url": "https://www.coursera.org/learn/graphic-design",
+        "rating": 4.7,
+        "category": "Design"
+    },
 ]
 
 CAREER_FAQS = [

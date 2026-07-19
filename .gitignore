@@ -9,3 +9,5 @@ __pycache__/
 chroma_data/
 .next/
 *.node
+
+CareerCure-admin/.env.local

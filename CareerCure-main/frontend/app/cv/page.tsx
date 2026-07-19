@@ -1,15 +1,16 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChatWidget from "@/components/ChatWidget";
 import { cvApi } from "@/lib/api";
 import {
-  UploadIcon, FileTextIcon, CheckCircleIcon, AlertCircleIcon, 
+  UploadIcon, FileTextIcon, CheckCircleIcon, AlertCircleIcon,
   BriefcaseIcon, SparklesIcon, WrenchIcon, DownloadIcon,
-  TrendingUpIcon, UserIcon, AwardIcon, 
+  TrendingUpIcon, UserIcon, AwardIcon,
   TargetIcon, LightbulbIcon, KeyIcon,
-  CompassIcon, FileDownIcon
+  CompassIcon, FileDownIcon, ArrowRightIcon
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -199,15 +200,15 @@ function generateCvHtml(inlines: ParsedLine[], name: string): string {
   let body = "";
   for (const pl of inlines) {
     if (pl.type === "empty") { body += "<div style='height:0.35rem'></div>"; }
-    else if (pl.type === "name") { body += `<h1 style='font-family:Georgia,Times,serif;font-size:1.6rem;font-weight:600;color:#659287;text-align:center;margin-bottom:0.2rem;margin-top:0.15rem'>${escHtml(pl.text)}</h1>`; }
-    else if (pl.type === "contact") { body += `<p style='font-size:0.8rem;color:#65928799;text-align:center;margin-bottom:0.5rem;font-weight:300'>${escHtml(pl.text)}</p>`; }
-    else if (pl.type === "section") { body += `<div style='margin-top:1rem;margin-bottom:0.4rem'><h3 style='font-size:0.9rem;font-weight:800;color:#3A5C52;text-transform:uppercase;letter-spacing:0.08em;font-family:monospace'>${escHtml(pl.text)}</h3><div style='height:2px;background:#65928755;margin-top:0.25rem;border-radius:1px'></div></div>`; }
-    else if (pl.type === "bullet") { const clean = pl.text.replace(/^[•\-\*▪\d.)]\s*/, ""); body += `<p style='font-size:0.85rem;color:#659287cc;padding-left:0.8rem;margin-bottom:0.35rem;line-height:1.5'><span style='color:#659287;margin-right:0.25rem'>•</span>${escHtml(clean)}</p>`; }
-    else if (pl.type === "important") { body += `<p style='font-size:0.85rem;color:#659287;font-weight:600;margin-bottom:0.35rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
-    else { body += `<p style='font-size:0.85rem;color:#659287b3;margin-bottom:0.15rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
+    else if (pl.type === "name") { body += `<h1 style='font-family:Georgia,Times,serif;font-size:1.6rem;font-weight:600;color:#0b2443;text-align:center;margin-bottom:0.2rem;margin-top:0.15rem'>${escHtml(pl.text)}</h1>`; }
+    else if (pl.type === "contact") { body += `<p style='font-size:0.8rem;color:#0b244399;text-align:center;margin-bottom:0.5rem;font-weight:300'>${escHtml(pl.text)}</p>`; }
+    else if (pl.type === "section") { body += `<div style='margin-top:1rem;margin-bottom:0.4rem'><h3 style='font-size:0.9rem;font-weight:800;color:#0b2443;text-transform:uppercase;letter-spacing:0.08em;font-family:monospace'>${escHtml(pl.text)}</h3><div style='height:2px;background:#b2892e55;margin-top:0.25rem;border-radius:1px'></div></div>`; }
+    else if (pl.type === "bullet") { const clean = pl.text.replace(/^[•\-\*▪\d.)]\s*/, ""); body += `<p style='font-size:0.85rem;color:#0b2443cc;padding-left:0.8rem;margin-bottom:0.35rem;line-height:1.5'><span style='color:#0b2443;margin-right:0.25rem'>•</span>${escHtml(clean)}</p>`; }
+    else if (pl.type === "important") { body += `<p style='font-size:0.85rem;color:#0b2443;font-weight:600;margin-bottom:0.35rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
+    else { body += `<p style='font-size:0.85rem;color:#0b2443b3;margin-bottom:0.15rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
   }
   const n = name || "CV";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(n)} - CV</title><style>@page{margin:0.6in}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1A2E24;max-width:750px;margin:0 auto;padding:1rem;background:white}*{box-sizing:border-box}@media print{body{padding:0;max-width:100%}}</style></head><body>${body}</body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(n)} - CV</title><style>@page{margin:0.6in}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0b2443;max-width:750px;margin:0 auto;padding:1rem;background:white}*{box-sizing:border-box}@media print{body{padding:0;max-width:100%}}</style></head><body>${body}</body></html>`;
 }
 
 function escHtml(s: string): string {
@@ -554,12 +555,21 @@ function AnalyseTab() {
             <span className="font-medium">CV analyzed successfully!</span>
           </div>
           <AnalysisResults analysis={analysis} />
-          <button
-            onClick={resetUpload}
-            className="w-full bg-paper hover:bg-line/60 text-primary font-medium py-2 px-4 rounded-lg transition-colors border border-line"
-          >
-            Upload Another CV
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/dashboard"
+              className="flex-1 bg-primary hover:bg-primary-d text-white font-medium py-3 px-4 rounded-lg transition-all hover:shadow-sm flex items-center justify-center gap-2"
+            >
+              Continue to Dashboard
+              <ArrowRightIcon className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={resetUpload}
+              className="flex-1 bg-paper hover:bg-line/60 text-primary font-medium py-3 px-4 rounded-lg transition-colors border border-line"
+            >
+              Upload Another CV
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -690,35 +700,35 @@ function GenerateTab() {
             <label className="block text-sm font-medium text-primary/80 mb-2">
               Full Name <span className="text-primary">*</span>
             </label>
-            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">
               Email <span className="text-primary">*</span>
             </label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Phone</label>
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 300 1234567" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 300 1234567" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Location</label>
-            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Lahore, Pakistan" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Lahore, Pakistan" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">LinkedIn</label>
-            <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="linkedin.com/in/johndoe" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="linkedin.com/in/johndoe" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">
               Target Role <span className="text-primary">*</span>
             </label>
-            <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} placeholder="Software Engineer" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} placeholder="Software Engineer" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Years of Experience</label>
-            <input type="text" value={expYears} onChange={(e) => setExpYears(e.target.value)} placeholder="2" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={expYears} onChange={(e) => setExpYears(e.target.value)} placeholder="2" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
         </div>
       </div>
@@ -729,15 +739,15 @@ function GenerateTab() {
             <label className="block text-sm font-medium text-primary/80 mb-2">
               Education <span className="text-primary">*</span>
             </label>
-            <textarea rows={3} value={education} onChange={(e) => setEducation(e.target.value)} placeholder="BS Computer Science, FAST NUCES, 2020-2024" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary resize-none transition-colors hover:border-primary/40" />
+            <textarea rows={3} value={education} onChange={(e) => setEducation(e.target.value)} placeholder="BS Computer Science, FAST NUCES, 2020-2024" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink resize-none transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Work Experience</label>
-            <textarea rows={4} value={workExp} onChange={(e) => setWorkExp(e.target.value)} placeholder="Software Intern at XYZ Company (2023)&#10;• Built REST APIs using Python and FastAPI&#10;• Collaborated with team of 5 developers" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary resize-none transition-colors hover:border-primary/40" />
+            <textarea rows={4} value={workExp} onChange={(e) => setWorkExp(e.target.value)} placeholder="Software Intern at XYZ Company (2023)&#10;• Built REST APIs using Python and FastAPI&#10;• Collaborated with team of 5 developers" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink resize-none transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Projects</label>
-            <textarea rows={4} value={projects} onChange={(e) => setProjects(e.target.value)} placeholder="E-commerce Website&#10;• Built with React and Node.js&#10;• Implemented user authentication and payment processing" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary resize-none transition-colors hover:border-primary/40" />
+            <textarea rows={4} value={projects} onChange={(e) => setProjects(e.target.value)} placeholder="E-commerce Website&#10;• Built with React and Node.js&#10;• Implemented user authentication and payment processing" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink resize-none transition-colors hover:border-primary/40" />
           </div>
         </div>
       </div>
@@ -748,19 +758,19 @@ function GenerateTab() {
             <label className="block text-sm font-medium text-primary/80 mb-2">
               Skills <span className="text-primary">*</span>
             </label>
-            <textarea rows={3} value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Python, React, FastAPI, PostgreSQL, Docker, Git, JavaScript, HTML, CSS" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary resize-none transition-colors hover:border-primary/40" />
+            <textarea rows={3} value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Python, React, FastAPI, PostgreSQL, Docker, Git, JavaScript, HTML, CSS" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink resize-none transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Certifications</label>
-            <textarea rows={2} value={certs} onChange={(e) => setCerts(e.target.value)} placeholder="AWS Certified Developer&#10;Google Data Analytics Certificate" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary resize-none transition-colors hover:border-primary/40" />
+            <textarea rows={2} value={certs} onChange={(e) => setCerts(e.target.value)} placeholder="AWS Certified Developer&#10;Google Data Analytics Certificate" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink resize-none transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Languages</label>
-            <input type="text" value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder="English (Fluent), Urdu (Native)" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <input type="text" value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder="English (Fluent), Urdu (Native)" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
           <div>
             <label className="block text-sm font-medium text-primary/80 mb-2">Achievements</label>
-            <textarea rows={2} value={achievements} onChange={(e) => setAchievements(e.target.value)} placeholder="Dean's List 2023&#10;Hackathon Winner - Tech Innovation Challenge" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40" />
+            <textarea rows={2} value={achievements} onChange={(e) => setAchievements(e.target.value)} placeholder="Dean's List 2023&#10;Hackathon Winner - Tech Innovation Challenge" className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40" />
           </div>
         </div>
       </div>
@@ -908,7 +918,7 @@ function RebuildTab() {
           value={targetRole}
           onChange={(e) => setTargetRole(e.target.value)}
           placeholder="e.g. Software Engineer, Data Analyst"
-          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-white text-primary transition-colors hover:border-primary/40"
+          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary bg-surface text-ink transition-colors hover:border-primary/40"
         />
         <p className="text-xs text-primary/50 mt-2 font-mono tracking-wide">
           Providing a target role helps optimize keywords for that specific position.
@@ -923,7 +933,7 @@ function RebuildTab() {
               "flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-all",
               useSaved
                 ? "bg-primary text-white border-primary hover:bg-primary-d"
-                : "bg-white text-primary/70 border-line hover:border-primary/50 hover:bg-primary/5"
+                : "bg-surface text-ink/70 border-line hover:border-primary/50 hover:bg-primary/5"
             )}
           >
             Use Saved CV
@@ -934,7 +944,7 @@ function RebuildTab() {
               "flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-all",
               !useSaved
                 ? "bg-primary text-white border-primary hover:bg-primary-d"
-                : "bg-white text-primary/70 border-line hover:border-primary/50 hover:bg-primary/5"
+                : "bg-surface text-ink/70 border-line hover:border-primary/50 hover:bg-primary/5"
             )}
           >
             Upload New PDF
@@ -1016,10 +1026,10 @@ export default function CVPage() {
               fill="none"
               aria-hidden="true"
             >
-              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 210 C 100 110, 220 260, 340 190 S 500 120, 560 220" stroke="#b2892e" strokeWidth="1.5" />
             </svg>
             <div className="relative">
               <div className="flex items-center gap-2 mb-3">

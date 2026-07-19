@@ -13,9 +13,9 @@ const DURATIONS = ["All", "Under 10 hours", "10–30 hours", "Over 30 hours"];
 const LEVELS = ["All", "Beginner", "Intermediate", "Advanced"];
 
 const LEVEL_DOT: Record<string, string> = {
-  Beginner: "#B1D3B9",
-  Intermediate: "#88BDA4",
-  Advanced: "#659287",
+  Beginner: "#5b7a9d",
+  Intermediate: "#1a3c66",
+  Advanced: "#b2892e",
 };
 
 function normalizeCourse(raw: Record<string, unknown>): MockCourse {
@@ -56,6 +56,7 @@ export default function CoursesPage() {
   const [roadmapCourses, setRoadmapCourses] = useState<MockCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [usingMock, setUsingMock] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("All");
   const [durationFilter, setDurationFilter] = useState("All");
@@ -101,9 +102,7 @@ export default function CoursesPage() {
           );
         }
       } catch {
-        setCourses(MOCK_COURSES);
-        setRoadmapCourses(MOCK_COURSES.filter((c) => c.match_score && c.match_score >= 0.75).slice(0, 4));
-        setUsingMock(true);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -152,10 +151,10 @@ export default function CoursesPage() {
               fill="none"
               aria-hidden="true"
             >
-              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#659287" strokeWidth="1.5" />
-              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#659287" strokeWidth="1.5" />
+              <path d="M-20 60 C 100 10, 220 110, 340 40 S 500 20, 560 70" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 110 C 100 60, 220 160, 340 90 S 500 70, 560 120" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 160 C 100 110, 220 210, 340 140 S 500 120, 560 170" stroke="#b2892e" strokeWidth="1.5" />
+              <path d="M-20 210 C 100 160, 220 260, 340 190 S 500 170, 560 220" stroke="#b2892e" strokeWidth="1.5" />
             </svg>
 
             <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
@@ -274,6 +273,20 @@ export default function CoursesPage() {
                 Plotting course…
               </p>
             </div>
+          ) : loadError ? (
+            <div className="text-center py-20 border border-dashed border-line">
+              <p className="text-primary/70 mb-2 font-light">Couldn&apos;t load courses.</p>
+              <p className="font-mono text-xs tracking-wide text-primary/40 mb-5">
+                The server may be unavailable. Please try again.
+              </p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="font-mono text-[11px] tracking-[0.1em] uppercase px-4 py-2 border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           ) : (
             <>
               {roadmapCourses.length > 0 && (
@@ -290,7 +303,7 @@ export default function CoursesPage() {
                       className="hidden md:block absolute top-[15px] left-0 right-0 h-px"
                       style={{
                         backgroundImage:
-                          "repeating-linear-gradient(to right, #88BDA4 0, #88BDA4 4px, transparent 4px, transparent 11px)",
+                          "repeating-linear-gradient(to right, #b2892e 0, #b2892e 4px, transparent 4px, transparent 11px)",
                       }}
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

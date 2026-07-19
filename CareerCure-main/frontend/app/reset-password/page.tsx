@@ -48,11 +48,11 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center space-y-4 py-4">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircleIcon className="w-8 h-8 text-green-600" />
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircleIcon className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900">Password reset!</h2>
-        <p className="text-gray-500 text-sm">Your password has been updated. Redirecting to login...</p>
+        <h2 className="text-xl font-bold text-primary-dark">Password reset!</h2>
+        <p className="text-ink/50 text-sm">Your password has been updated. Redirecting to login...</p>
         <Link href="/login" className="btn-primary inline-block">Go to Login</Link>
       </div>
     );
@@ -76,9 +76,9 @@ function ResetPasswordForm() {
           className="input font-mono tracking-widest text-center text-lg"
           placeholder="000000" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
           required />
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-ink/40 mt-1">
           Get your code from{" "}
-          <Link href="/forgot-password" className="text-primary-600 hover:underline">forgot password</Link>
+          <Link href="/forgot-password" className="text-primary hover:underline">forgot password</Link>
         </p>
       </div>
 
@@ -89,7 +89,7 @@ function ResetPasswordForm() {
             placeholder="Min. 8 characters" value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)} required autoComplete="new-password" />
           <button type="button" onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink/60"
             aria-label={showPassword ? "Hide password" : "Show password"}>
             {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
           </button>
@@ -108,7 +108,7 @@ function ResetPasswordForm() {
       </button>
 
       <div className="text-center">
-        <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700">Back to login</Link>
+        <Link href="/login" className="text-sm text-ink/50 hover:text-ink/70">Back to login</Link>
       </div>
     </form>
   );
@@ -116,7 +116,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
@@ -125,11 +125,11 @@ export default function ResetPasswordPage() {
             </div>
             <span className="font-bold text-xl text-primary-dark">CareerCure</span>
           </Link>
-          <h1 className="mt-6 text-2xl font-bold text-gray-900">Reset your password</h1>
-          <p className="mt-1 text-sm text-gray-500">Enter your reset code and choose a new password</p>
+          <h1 className="mt-6 text-2xl font-bold text-primary-dark">Reset your password</h1>
+          <p className="mt-1 text-sm text-ink/50">Enter your reset code and choose a new password</p>
         </div>
         <div className="card">
-          <Suspense fallback={<p className="text-center text-gray-500 py-4">Loading...</p>}>
+          <Suspense fallback={<p className="text-center text-ink/50 py-4">Loading...</p>}>
             <ResetPasswordForm />
           </Suspense>
         </div>

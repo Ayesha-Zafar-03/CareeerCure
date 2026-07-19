@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
-import { BriefcaseIcon, EyeIcon, EyeOffIcon, MailIcon, LockIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, MailIcon, LockIcon } from "lucide-react";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const { login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -20,8 +20,13 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const result = await login(email, password);
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login";
+      if (result.status === "admin_otp_required" || result.user.is_admin) {
+        window.location.href = adminUrl;
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
@@ -33,34 +38,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-paper via-primary/5 to-primary/10 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line animate-fade-in-up">
-          {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <div className="bg-primary p-2.5 rounded-xl">
-                <BriefcaseIcon className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-xl text-primary-dark">CareerCure</span>
-            </Link>
-            <h1 className="text-2xl font-bold text-primary-dark mb-2">Welcome back</h1>
-            <p className="text-ink/60">Sign in to your CareerCure account</p>
+    <div className="min-h-screen flex">
+      {/* Left panel — brand */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary-dark relative overflow-hidden items-center justify-center">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 px-16 max-w-lg">
+          <Link href="/" className="flex items-center mb-8">
+            <img src="/logo.jpeg" alt="CareerCure" className="h-10 w-auto" />
+          </Link>
+          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+            Welcome<br />back
+          </h1>
+          <p className="text-white/60 text-base leading-relaxed">
+            Sign in to continue building your career with personalized roadmaps, internships, and courses.
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper">
+        <div className="w-full max-w-sm">
+          {/* Mobile logo */}
+          <Link href="/" className="lg:hidden block mb-10">
+            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
+          </Link>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-primary-dark mb-1">Sign in</h2>
+            <p className="text-sm text-ink/50">Welcome back to your CareerCure account</p>
           </div>
 
-          {/* Social Login Buttons */}
-          <SocialLoginButtons emailFallbackLabel="email login" />
+          {/* Social Login (Google only) */}
+          <SocialLoginButtons emailFallbackLabel="email login" googleOnly />
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-line"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-surface text-ink/50">or</span>
+              <span className="px-3 bg-paper text-ink/50">or</span>
             </div>
           </div>
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
@@ -68,7 +90,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="animate-fade-in-up">
+            <div>
               <label className="block text-sm font-medium text-ink mb-2" htmlFor="email">
                 Email address
               </label>
@@ -87,12 +109,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="animate-fade-in-up">
+            <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-ink" htmlFor="password">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+                <Link href="/forgot-password" className="text-sm text-accent hover:text-accent-d">
                   Forgot password?
                 </Link>
               </div>
@@ -134,9 +156,31 @@ export default function LoginPage() {
                 Sign up for free
               </Link>
             </p>
+            <p className="mt-3 text-sm text-ink/60">
+              <a
+                href={process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001/login"}
+                className="text-ink/50 hover:text-ink underline underline-offset-2"
+              >
+                Login as admin
+              </a>
+            </p>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-paper flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }

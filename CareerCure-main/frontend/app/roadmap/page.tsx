@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { roadmapApi } from "@/lib/api";
+import { roadmapApi, planApi } from "@/lib/api";
 import ChatWidget from "@/components/ChatWidget";
 import {
   CompassIcon, ClockIcon, BookOpenIcon, Check, ExternalLinkIcon,
@@ -11,7 +11,6 @@ import {
 import clsx from "clsx";
 
 const STORAGE_KEY = "roadmap-progress";
-const PLAN_KEY = "planned-courses";
 const ROADMAP_LIST_KEY = "roadmap-titles";
 
 interface PlannedCourse {
@@ -23,21 +22,6 @@ interface PlannedCourse {
   difficulty_level?: string;
   description?: string;
   roadmap?: string;
-}
-
-function getPlannedCourses(): PlannedCourse[] {
-  try {
-    const raw = localStorage.getItem(PLAN_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {}
-  return [];
-}
-
-function savePlannedCourses(courses: PlannedCourse[]) {
-  localStorage.setItem(PLAN_KEY, JSON.stringify(courses));
 }
 
 function syncRoadmapTitles(roadmaps: any[]) {
@@ -68,7 +52,9 @@ export default function RoadmapPage() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setCompleted(JSON.parse(saved));
     } catch {}
-    setPlannedCourses(getPlannedCourses());
+    planApi.list().then((res) => {
+      setPlannedCourses(res.data.courses || []);
+    }).catch(() => {});
   }, []);
 
   const handleGenerate = async () => {
@@ -153,7 +139,7 @@ export default function RoadmapPage() {
   const removeFromPlan = (id: number) => {
     const updated = plannedCourses.filter((c) => c.id !== id);
     setPlannedCourses(updated);
-    savePlannedCourses(updated);
+    planApi.remove(id).catch(() => {});
   };
 
   return (
