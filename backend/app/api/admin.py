@@ -5,7 +5,7 @@ Admin API endpoints
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, text
 from pydantic import BaseModel
 from typing import List, Optional
 from app.core.database import get_db
@@ -153,30 +153,31 @@ async def get_admin_stats(
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    """Get admin dashboard statistics"""
+    """Get admin dashboard statistics (single query)"""
     
-    # Calculate date for recent registrations (last 7 days)
     week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     
-    # Get all stats in efficient queries
-    total_users = db.query(User).count()
-    active_users = db.query(User).filter(User.is_active == True).count()
-    verified_users = db.query(User).filter(User.is_verified == True).count()
-    admin_users = db.query(User).filter(User.is_admin == True).count()
-    oauth_users = db.query(User).filter(User.oauth_provider.isnot(None)).count()
-    recent_registrations = db.query(User).filter(User.created_at >= week_ago).count()
-    total_jobs = db.query(Internship).count()
-    total_courses = db.query(Course).count()
+    row = db.execute(text("""
+        SELECT
+            (SELECT COUNT(*) FROM users) AS total_users,
+            (SELECT COUNT(*) FROM users WHERE is_active = TRUE) AS active_users,
+            (SELECT COUNT(*) FROM users WHERE is_verified = TRUE) AS verified_users,
+            (SELECT COUNT(*) FROM users WHERE is_admin = TRUE) AS admin_users,
+            (SELECT COUNT(*) FROM users WHERE oauth_provider IS NOT NULL) AS oauth_users,
+            (SELECT COUNT(*) FROM users WHERE created_at >= :week_ago) AS recent_registrations,
+            (SELECT COUNT(*) FROM internships) AS total_jobs,
+            (SELECT COUNT(*) FROM courses) AS total_courses
+    """), {"week_ago": week_ago}).one()
     
     return AdminStatsResponse(
-        total_users=total_users,
-        active_users=active_users,
-        verified_users=verified_users,
-        admin_users=admin_users,
-        oauth_users=oauth_users,
-        recent_registrations=recent_registrations,
-        total_jobs=total_jobs,
-        total_courses=total_courses
+        total_users=row.total_users,
+        active_users=row.active_users,
+        verified_users=row.verified_users,
+        admin_users=row.admin_users,
+        oauth_users=row.oauth_users,
+        recent_registrations=row.recent_registrations,
+        total_jobs=row.total_jobs,
+        total_courses=row.total_courses
     )
 
 
@@ -610,19 +611,28 @@ async def get_db_stats(
     from app.models.career import Roadmap
     
     try:
-        db_version = db.execute("SELECT version()").scalar() or "Unknown"
+        row = db.execute(text("""
+            SELECT
+                (SELECT COUNT(*) FROM users) AS total_users,
+                (SELECT COUNT(*) FROM users WHERE is_active = TRUE) AS active_users,
+                (SELECT COUNT(*) FROM internships) AS total_jobs,
+                (SELECT COUNT(*) FROM courses) AS total_courses,
+                (SELECT COUNT(*) FROM profiles) AS total_profiles,
+                (SELECT COUNT(*) FROM roadmaps) AS total_roadmaps,
+                version() AS db_version
+        """)).one()
         db_status = "Connected"
     except Exception:
-        db_version = "Unknown"
+        row = None
         db_status = "Error"
     
     return DBStatsResponse(
-        total_users=db.query(User).count(),
-        active_users=db.query(User).filter(User.is_active == True).count(),
-        total_jobs=db.query(Internship).count(),
-        total_courses=db.query(Course).count(),
-        total_profiles=db.query(Profile).count(),
-        total_roadmaps=db.query(Roadmap).count(),
+        total_users=row.total_users if row else 0,
+        active_users=row.active_users if row else 0,
+        total_jobs=row.total_jobs if row else 0,
+        total_courses=row.total_courses if row else 0,
+        total_profiles=row.total_profiles if row else 0,
+        total_roadmaps=row.total_roadmaps if row else 0,
         db_status=db_status,
-        db_version=db_version,
+        db_version=row.db_version if row else "Unknown",
     )

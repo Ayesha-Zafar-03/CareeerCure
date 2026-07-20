@@ -122,27 +122,52 @@ def list_conversations(
         .all()
     )
 
+    conv_ids = [r[0] for r in rows]
+    first_messages = {}
+    last_messages = {}
+    if conv_ids:
+        first_sub = (
+            db.query(
+                ChatMessage.conversation_id,
+                ChatMessage.content,
+                ChatMessage.created_at,
+                func.row_number().over(
+                    partition_by=ChatMessage.conversation_id,
+                    order_by=ChatMessage.sequence.asc()
+                ).label("rn")
+            )
+            .filter(
+                ChatMessage.user_id == current_user.id,
+                ChatMessage.role == "user",
+                ChatMessage.conversation_id.in_(conv_ids),
+            )
+            .subquery()
+        )
+        for row in db.query(first_sub).filter(first_sub.c.rn == 1).all():
+            first_messages[row.conversation_id] = row
+
+        last_sub = (
+            db.query(
+                ChatMessage.conversation_id,
+                ChatMessage.created_at,
+                func.row_number().over(
+                    partition_by=ChatMessage.conversation_id,
+                    order_by=ChatMessage.sequence.desc()
+                ).label("rn")
+            )
+            .filter(
+                ChatMessage.user_id == current_user.id,
+                ChatMessage.conversation_id.in_(conv_ids),
+            )
+            .subquery()
+        )
+        for row in db.query(last_sub).filter(last_sub.c.rn == 1).all():
+            last_messages[row.conversation_id] = row
+
     conversations = []
     for conv_id, count in rows:
-        first_user = (
-            db.query(ChatMessage)
-            .filter(
-                ChatMessage.user_id == current_user.id,
-                ChatMessage.conversation_id == conv_id,
-                ChatMessage.role == "user",
-            )
-            .order_by(ChatMessage.sequence.asc(), ChatMessage.created_at.asc())
-            .first()
-        )
-        last_msg = (
-            db.query(ChatMessage)
-            .filter(
-                ChatMessage.user_id == current_user.id,
-                ChatMessage.conversation_id == conv_id,
-            )
-            .order_by(ChatMessage.sequence.desc(), ChatMessage.created_at.desc())
-            .first()
-        )
+        first_user = first_messages.get(conv_id)
+        last_msg = last_messages.get(conv_id)
         raw_title = (first_user.content if first_user else conv_id) or conv_id
         title = raw_title.strip().split("\n")[0][:60] or "New conversation"
         conversations.append({

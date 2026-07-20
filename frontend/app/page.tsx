@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   BriefcaseIcon, 
   FileTextIcon, 
@@ -10,16 +11,14 @@ import {
   SparklesIcon,
   ZapIcon,
   TrendingUpIcon,
-  CodeIcon,
-  DatabaseIcon,
   BrainIcon,
   RocketIcon,
   TargetIcon,
   StarIcon,
-  UsersIcon,
   BookOpenIcon
 } from "lucide-react";
-import VantaBackground from "@/components/VantaBackground";
+
+const VantaBackground = dynamic(() => import("@/components/VantaBackground"), { ssr: false });
 
 
 const FEATURES = [
@@ -83,12 +82,6 @@ export default function LandingPage() {
             >
               Login
             </a>
-            <a
-              href="/admin/login"
-              className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
-            >
-              Login as Admin
-            </a>
             <Link
               href="/register"
               className="bg-gradient-to-r from-primary to-primary-d hover:from-primary-d hover:to-primary-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
@@ -145,14 +138,8 @@ export default function LandingPage() {
           >
             Sign In
           </Link>
-          <a
-            href="/admin/login"
-            className="flex items-center gap-2 text-sm text-ink/50 hover:text-primary font-medium transition-colors duration-200 underline-offset-4 hover:underline"
-          >
-            Are you an admin? Login here
-          </a>
-        </div>
-
+          </div>
+            
         {/* Animated Stats/Features Bar */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in-up" style={{animationDelay: '1.5s'}}>
           {[

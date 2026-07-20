@@ -8,7 +8,7 @@ class Profile(Base):
     __tablename__ = "profiles"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, index=True)
     bio = Column(Text, nullable=True)
     skills = Column(JSON, default=list)          # ["Python", "SQL", ...]
     education = Column(String(255), nullable=True)

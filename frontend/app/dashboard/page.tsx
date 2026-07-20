@@ -27,16 +27,14 @@ export default function DashboardPage() {
   const [donutOffset, setDonutOffset] = useState(283);
 
   useEffect(() => {
-    profileApi.getMe().then((res) => {
-      setProfile(res.data);
+    Promise.all([
+      profileApi.getMe(),
+      planApi.list(),
+    ]).then(([profileRes, planRes]) => {
+      setProfile(profileRes.data);
+      setPlannedCourses(planRes.data.courses || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    planApi.list().then((res) => {
-      setPlannedCourses(res.data.courses || []);
-    }).catch(() => {});
   }, []);
 
   const hasCv = !!profile?.profile?.has_cv;

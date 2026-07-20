@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -22,6 +22,10 @@ class PlannedCourse(Base):
 
     user = relationship("User")
 
+    __table_args__ = (
+        Index("ix_planned_courses_user_course", "user_id", "course_id"),
+    )
+
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
@@ -40,3 +44,7 @@ class ChatMessage(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
+
+    __table_args__ = (
+        Index("ix_chat_messages_user_conversation", "user_id", "conversation_id"),
+    )

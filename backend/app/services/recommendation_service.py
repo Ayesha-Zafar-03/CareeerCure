@@ -104,10 +104,15 @@ def get_course_matches(cv_text: str, db: Session, top_k: int = 5, profile=None) 
         embedding = embed_text(query)
         raw_matches = search_similar_courses(embedding, top_k=top_k)
         
-        # Enrich with database data
+        # Batch-fetch all courses in one query (fixes N+1)
+        course_ids = [m["course_id"] for m in raw_matches]
+        courses_map = {}
+        if course_ids:
+            for c in db.query(Course).filter(Course.id.in_(course_ids)).all():
+                courses_map[c.id] = c
         enriched = []
         for match in raw_matches:
-            course = db.query(Course).filter(Course.id == match["course_id"]).first()
+            course = courses_map.get(match["course_id"])
             if course:
                 enriched.append({
                     "id": course.id,
@@ -165,9 +170,15 @@ def get_job_matches(cv_text: str, db: Session, top_k: int = 5, profile=None) -> 
     embedding = embed_text(query)
     raw_matches = search_similar_internships(embedding, top_k=top_k)
 
+    # Batch-fetch all internships in one query (fixes N+1)
+    internship_ids = [m["internship_id"] for m in raw_matches]
+    internships_map = {}
+    if internship_ids:
+        for i in db.query(Internship).filter(Internship.id.in_(internship_ids)).all():
+            internships_map[i.id] = i
     enriched = []
     for match in raw_matches:
-        internship = db.query(Internship).filter(Internship.id == match["internship_id"]).first()
+        internship = internships_map.get(match["internship_id"])
         if internship:
             enriched.append(
                 {

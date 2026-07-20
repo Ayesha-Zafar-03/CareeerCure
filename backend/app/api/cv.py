@@ -155,9 +155,9 @@ async def rebuild_existing_cv(
     """Rebuild and optimize an existing CV for better ATS score."""
     try:
         cv_text = ""
+        profile = None
         
         if file:
-            # Use uploaded file
             if not file.filename.lower().endswith(".pdf"):
                 raise HTTPException(status_code=400, detail="Only PDF files are accepted")
             
@@ -170,17 +170,15 @@ async def rebuild_existing_cv(
             if not cv_text:
                 raise HTTPException(status_code=400, detail="Could not extract text from PDF")
         else:
-            # Use saved CV
             profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
             if not profile or not profile.cv_text:
                 raise HTTPException(status_code=404, detail="No saved CV found. Please upload a PDF or generate a CV first.")
             cv_text = profile.cv_text
         
-        # Rebuild the CV
         result = rebuild_cv_for_ats(cv_text, target_role or "")
         
-        # Save improved CV to profile
-        profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+        if not profile:
+            profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
         if profile:
             profile.cv_text = result["improved_cv_text"]
             profile.cv_filename = f"{current_user.full_name.replace(' ', '_')}_CV_Improved.txt"
