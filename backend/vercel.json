@@ -1,13 +1,22 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.py" }
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.11",
+        "includeFiles": "app/**"
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": "app/**"
+      "memory": 512,
+      "maxDuration": 30
     }
-  },
-  "env": {
-    "PYTHONPATH": "."
   }
 }

@@ -1345,6 +1345,9 @@ CV TEXT:
         
         result = json.loads(raw)
         
+        if not isinstance(result, dict):
+            raise ValueError(f"LLM returned non-dict JSON: {type(result).__name__}")
+        
         # Validate structure and provide defaults
         required_keys = ["extracted_skills", "skill_gaps", "strengths", "recommendations", "summary"]
         for key in required_keys:
@@ -1373,7 +1376,7 @@ CV TEXT:
         
         return result
         
-    except (json.JSONDecodeError, ValueError) as e:
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
         logger.warning(f"LLM returned invalid JSON for CV analysis: {e}")
         return {
             "extracted_skills": extract_skills_manually(cv_text)[:8],
@@ -1393,10 +1396,28 @@ def process_cv(user_id: int, pdf_bytes: bytes, filename: str) -> dict:
     cv_text = extract_text_from_pdf(pdf_bytes)
     if not cv_text:
         raise ValueError("Could not extract text from the uploaded PDF.")
+
+    if not isinstance(cv_text, str):
+        raise ValueError(f"extract_text_from_pdf returned non-string: {type(cv_text).__name__}")
+
     analysis = analyse_cv_with_llm(cv_text)
-    embedding = embed_text(cv_text)
-    upsert_cv(user_id, cv_text, embedding)
-    matches = search_similar_internships(embedding, top_k=5)
+
+    try:
+        embedding = embed_text(cv_text)
+    except TypeError as e:
+        logger.error(f"embed_text failed with TypeError for user {user_id}: {e}")
+        embedding = [0.0] * 384
+
+    try:
+        upsert_cv(user_id, cv_text, embedding)
+    except TypeError as e:
+        logger.error(f"upsert_cv failed with TypeError for user {user_id}: {e}")
+
+    try:
+        matches = search_similar_internships(embedding, top_k=5)
+    except TypeError as e:
+        logger.error(f"search_similar_internships failed with TypeError for user {user_id}: {e}")
+        matches = []
 
     return {
         "cv_text": cv_text,

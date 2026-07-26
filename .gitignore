@@ -21,3 +21,13 @@ chroma_data/
 *.tsbuildinfo
 *.kiro
 *.node
+
+# Archives
+*.rar
+*.zip
+*.tar.gz
+
+# Vercel
+.vercel
+/.vercel
+*.vercel.app
