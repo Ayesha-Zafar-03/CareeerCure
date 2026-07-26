@@ -6,17 +6,13 @@
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.11",
-        "includeFiles": "app/**"
+        "includeFiles": "app/**",
+        "memory": 512,
+        "maxDuration": 30
       }
     }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "api/index.py" }
-  ],
-  "functions": {
-    "api/index.py": {
-      "memory": 512,
-      "maxDuration": 30
-    }
-  }
+  ]
 }
