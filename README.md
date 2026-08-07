@@ -1,238 +1,162 @@
-# CareerCure 🚀
+# CareerCure — AI-Powered Career Development Platform
 
-**AI-Powered Career Development Platform for Students & Fresh Graduates**
+CareerCure is a full-stack, AI-powered career guidance platform built as a Final Year Project. It helps users analyze their CVs, get personalized career roadmaps, discover matching internships and courses, and chat with an AI career counselor — all powered by modern LLM and vector-search technologies.
 
-CareerCure is a full-stack Final Year Project that helps students navigate their career journey with four intelligent AI-powered features:
-
-1. **CV Analysis** — Upload your CV, get AI feedback, extract skills, identify gaps
-2. **Internship Matching** — Semantic job matching using ChromaDB embeddings
-3. **Career Roadmap Generator** — Personalised learning paths powered by Groq LLaMA3
-4. **AI Career Counselor** — Real-time chatbot with RAG knowledge base
+![Status](https://img.shields.io/badge/status-production--ready-green)
+![Branch](https://img.shields.io/badge/branch-deployment--ready-blue)
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Features
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js 14 + TypeScript + Tailwind CSS | Modern, responsive UI |
-| **Backend** | FastAPI (Python) | High-performance REST APIs |
-| **Database** | PostgreSQL | Relational data storage |
-| **Vector DB** | ChromaDB | Embeddings for semantic search |
-| **AI/LLM** | Groq (LLaMA3-8B) | Ultra-fast AI inference |
-| **Embeddings** | HuggingFace `all-MiniLM-L6-v2` | Sentence embeddings |
-| **Auth** | JWT + bcrypt | Secure authentication |
-| **DevOps** | Docker + Docker Compose | Containerised deployment |
+- **AI CV Analysis** — Upload a CV (PDF) and get instant AI-powered feedback: skills extracted, gaps identified, and tailored improvements.
+- **Career Roadmap** — Personalized step-by-step learning paths for 20+ tech careers, built from your skills and career goal.
+- **Internship Matching** — Semantic internship matching based on your CV, ranked by how well each opportunity fits your profile.
+- **Course Recommendations** — Curated course suggestions from Udemy, Coursera, and edX to fill your skill gaps.
+- **AI Career Counselor** — Real-time chat with an AI counselor powered by Groq LLaMA3 + Retrieval-Augmented Generation (RAG).
+- **Admin Portal** — Dedicated dashboard for user management, platform stats, courses, and internships.
+- **Auth & Security** — Email/password with OTP verification, password reset, and Google OAuth login. JWT-secured, rate-limited API.
+- **Scalable Performance** — N+1 query fixes, database indexes, optimized frontend bundles, and lazy-loaded Three.js backgrounds.
 
----
+## 🧰 Tech Stack
 
-## 🚀 Quick Start
+| Layer     | Technologies |
+|-----------|--------------|
+| Frontend  | Next.js 16 (App Router), React 18, Tailwind CSS, TypeScript, lucide-react |
+| Admin     | Next.js 16 (separate portal), React 18, Tailwind CSS |
+| Backend   | FastAPI, SQLAlchemy 2.0, Pydantic, Uvicorn |
+| AI / LLM  | Groq (Llama 3.1), sentence-transformers embeddings |
+| Vector DB | ChromaDB (semantic search / RAG) |
+| Database  | PostgreSQL (local, Docker, Supabase, or Neon) |
+| Auth      | JWT (python-jose), passlib/bcrypt, Authlib (Google OAuth) |
+| Emails    | Gmail SMTP (OTP & password reset) |
+| Extras    | PyMuPDF (CV parsing), ReportLab (PDF generation), slowapi (rate limiting) |
+
+## 📁 Repository Structure
+
+```
+CareerCure/
+├── frontend/                 # User-facing Next.js app (port 3000)
+│   ├── app/                  # App Router pages (login, dashboard, cv, roadmap, ...)
+│   ├── components/           # Shared UI components
+│   ├── lib/                  # API client and utilities
+│   └── .env.example
+├── admin/                    # Admin portal Next.js app (port 3001)
+│   ├── app/                  # Admin dashboard pages
+│   └── .env.example
+├── backend/                  # FastAPI backend (port 8000)
+│   ├── app/
+│   │   ├── api/              # Routers (auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan)
+│   │   ├── chatbot/          # AI career counselor service (RAG)
+│   │   ├── core/             # Config, database, security, rate limiting
+│   │   ├── models/           # SQLAlchemy models
+│   │   ├── services/         # CV, email, OAuth, recommendations, scheduler
+│   │   └── vector/           # ChromaDB + embedding services
+│   ├── api/index.py          # Vercel serverless entrypoint
+│   ├── tests/                # pytest suite
+│   ├── Dockerfile            # HuggingFace Spaces / Docker image
+│   └── .env.example
+├── database/
+│   └── dump.sql              # PostgreSQL schema dump
+├── deployment/
+│   └── docker/               # docker-compose + Dockerfile for full stack
+├── docs/                     # Deployment, admin portal, and sprint docs
+└── frontend.rar              # Archived copy of the frontend
+```
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- **Python 3.11+**
-- **Node.js 20+**
-- **PostgreSQL 16** (or use Docker)
-- **Groq API Key** (free at [console.groq.com](https://console.groq.com))
+- Python 3.10+ and Node.js 18+
+- PostgreSQL (or a hosted option like Supabase/Neon)
+- A [Groq API key](https://console.groq.com) (free tier)
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-username/CareerCure.git
-cd CareerCure-main
-```
-
-### 2. Backend Setup
+### 1. Backend (FastAPI)
 
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+venv\Scripts\activate          # Windows  |  source venv/bin/activate (macOS/Linux)
 pip install -r requirements.txt
-
-# Create .env file
-cp .env.example .env
-# Edit .env and add your GROQ_API_KEY and DATABASE_URL
-
-# Create database tables
-python -c "from app.core.database import create_tables; create_tables()"
-
-# Seed data (career paths, internships, FAQs)
-python app/seed.py
-
-# Run the server
-uvicorn app.main:app --reload
+copy .env.example .env         # Windows | cp .env.example .env (macOS/Linux)
 ```
 
-Backend will run at **http://localhost:8000**
-
-### 3. Frontend Setup
+Edit `.env` with your database URL, `SECRET_KEY`, and `GROQ_API_KEY`, then run:
 
 ```bash
-cd ../frontend
+uvicorn app.main:app --reload --port 8000
+```
 
-# Install dependencies
+API docs are available at `http://localhost:8000/docs`.
+
+> Seeding scripts are included (`seed_50_jobs_final.py`, `seed_real_data.py`, `create_admin.py`) to populate jobs, courses, and an admin user.
+
+### 2. Frontend (User portal)
+
+```bash
+cd frontend
 npm install
+copy .env.example .env.local   # Windows | cp .env.example .env.local (macOS/Linux)
+```
 
-# Create .env.local
-cp .env.local.example .env.local
+Set `NEXT_PUBLIC_API_URL=http://localhost:8000` in `.env.local`, then:
 
-# Run development server
+```bash
 npm run dev
 ```
 
-Frontend will run at **http://localhost:3000**
+Open `http://localhost:3000`.
 
----
-
-## 🐳 Docker Deployment (Recommended)
+### 3. Admin portal
 
 ```bash
-cd deployment/docker
-
-# Create .env file with your Groq API key
-echo "GROQ_API_KEY=your-key-here" > .env
-
-# Start all services
-docker-compose up -d
-
-# Seed the database (run once)
-docker exec careercure_backend python app/seed.py
+cd admin
+npm install
+copy .env.example .env.local
+npm run dev
 ```
 
-Services:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **PostgreSQL**: localhost:5432
-
----
-
-## 📚 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` — Create account
-- `POST /api/auth/login` — Login
-
-### CV Analysis
-- `POST /api/cv/upload` — Upload PDF CV
-- `GET /api/cv/analysis` — Get last analysis
-
-### Career Roadmap
-- `POST /api/roadmap/generate` — Generate roadmap
-- `GET /api/roadmap/list` — List user roadmaps
-- `GET /api/roadmap/{id}` — Get specific roadmap
-
-### Internships
-- `GET /api/internships/list` — List all internships
-- `GET /api/internships/matches` — Get personalised matches
-- `GET /api/internships/{id}` — Get internship details
-
-### AI Chatbot
-- `POST /api/chat/message` — Send message to AI counselor
-
-### Profile
-- `GET /api/profile/me` — Get current user profile
-- `PUT /api/profile/me` — Update profile
-
-Full API documentation: **http://localhost:8000/docs**
-
----
+Open `http://localhost:3001`. Default admin credentials: `admin@careercure.com` / `admin123` (create via `backend/create_admin.py`).
 
 ## 🧪 Testing
 
+Backend tests use pytest:
+
 ```bash
-# Backend
 cd backend
 pytest
-
-# Frontend
-cd frontend
-npm run lint
 ```
 
----
+The suite covers auth, login, CV, roadmap, internships, career coach, chatbot, profile, and health endpoints.
 
-## 📁 Project Structure
+## 📦 Docker (Full stack)
 
-```
-CareerCure-main/
-├── backend/
-│   ├── app/
-│   │   ├── api/          # API routes
-│   │   ├── chatbot/      # AI chatbot service
-│   │   ├── core/         # Config, database, security
-│   │   ├── models/       # SQLAlchemy models
-│   │   ├── services/     # Business logic
-│   │   ├── vector/       # ChromaDB & embeddings
-│   │   ├── main.py       # FastAPI app
-│   │   └── seed.py       # Database seeding
-│   └── requirements.txt
-├── frontend/
-│   ├── app/              # Next.js pages
-│   ├── components/       # React components
-│   ├── context/          # Auth context
-│   ├── lib/              # API client
-│   └── package.json
-├── deployment/
-│   └── docker/
-│       ├── Dockerfile
-│       └── docker-compose.yml
-└── docs/
-    └── sprints/          # Sprint documentation
+```bash
+docker-compose -f deployment/docker/docker-compose.yml up --build
 ```
 
----
+This brings up PostgreSQL, the FastAPI backend, and the Next.js frontend together.
 
-## 🎯 Features
+## ☁️ Deployment
 
-### ✅ Implemented
+The repo is organized as a deploy-ready monorepo; each sub-project deploys independently.
 
-- [x] User authentication (JWT)
-- [x] CV upload & AI analysis (Groq LLaMA3)
-- [x] Skill extraction & gap analysis
-- [x] Semantic internship matching (ChromaDB)
-- [x] Career roadmap generation
-- [x] AI chatbot with RAG
-- [x] Responsive UI (Tailwind CSS)
-- [x] Docker deployment
-- [x] Seeded data (20+ careers, 30+ internships, 15+ FAQs)
+| Component | Platform | Notes |
+|-----------|----------|-------|
+| `frontend/` | Vercel | Import as a Next.js project; set `NEXT_PUBLIC_API_URL` |
+| `admin/`   | Vercel | Import as a Next.js project; set `NEXT_PUBLIC_API_URL` |
+| `backend/` | HuggingFace Spaces (Docker) | Add `DATABASE_URL`, `SECRET_KEY`, `GROQ_API_KEY`, and OAuth/email secrets as repo secrets |
 
-### 🔮 Future Enhancements
+See [`docs/DEPLOY.md`](docs/DEPLOY.md) for step-by-step instructions, including free PostgreSQL setup and Google OAuth redirect URIs.
 
-- [ ] GitHub Actions CI/CD
-- [ ] Unit & integration tests
-- [ ] Email notifications
-- [ ] Admin dashboard
-- [ ] Interview prep module
+## 📚 Documentation
 
----
-
-## 👥 Team
-
-- **Ayesha Zafar** — Backend Lead + AI Integration
-- **Eman** — Frontend Lead + UI/UX
-- **Hira Jawaid** — Database + DevOps + Documentation
-
----
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — deployment guide
+- [`docs/ADMIN_PORTAL_READY.md`](docs/ADMIN_PORTAL_READY.md) — admin portal setup
+- [`docs/dual_portal_setup.md`](docs/dual_portal_setup.md) — running both portals locally
+- [`docs/sprints/`](docs/sprints/) — sprint reports
 
 ## 📄 License
 
-This is a Final Year Project (FYP) for educational purposes.
-
----
-
-## 🙏 Acknowledgments
-
-- **Groq** for ultra-fast LLM inference
-- **HuggingFace** for open-source embeddings
-- **ChromaDB** for vector search
-- **FastAPI** & **Next.js** communities
-
----
-
-**Built with ❤️ by the CareerCure Team**
+MIT
