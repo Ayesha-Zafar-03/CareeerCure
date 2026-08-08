@@ -1,12 +1,10 @@
-import chromadb
-from chromadb.config import Settings as ChromaSettings
-from app.core.config import settings
-from typing import Optional
 import logging
+import math
+from typing import Optional
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-
-_client: Optional[chromadb.Client] = None
 
 # Collection names
 COLLECTION_CVS = "cvs"
@@ -14,20 +12,93 @@ COLLECTION_JOBS = "internships"
 COLLECTION_COURSES = "courses"
 COLLECTION_FAQS = "career_faqs"
 
+_client: Optional[object] = None
 
-def get_chroma_client() -> chromadb.Client:
-    """Return a persistent ChromaDB client (singleton)."""
-    global _client
-    if _client is None:
-        logger.info(f"Connecting to ChromaDB at {settings.CHROMA_PERSIST_DIR}")
-        _client = chromadb.PersistentClient(
+
+def _cosine_similarity(a: list, b: list) -> float:
+    if not a or not b or len(a) != len(b):
+        return 0.0
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a)) or 1.0
+    nb = math.sqrt(sum(y * y for y in b)) or 1.0
+    return dot / (na * nb)
+
+
+class _MemoryCollection:
+    """Minimal in-memory collection that mirrors the ChromaDB API subset used here."""
+
+    def __init__(self, name: str):
+        self.name = name
+        self._docs = []  # list of dicts: id, embedding, document, metadata
+
+    def upsert(self, ids, embeddings, documents, metadatas):
+        existing = {d["id"]: d for d in self._docs}
+        for i, doc_id in enumerate(ids):
+            existing[doc_id] = {
+                "id": doc_id,
+                "embedding": embeddings[i] if embeddings else None,
+                "document": documents[i] if documents else "",
+                "metadata": metadatas[i] if metadatas else {},
+            }
+        self._docs = list(existing.values())
+
+    def count(self) -> int:
+        return len(self._docs)
+
+    def query(self, query_embeddings, n_results, include=None):
+        qe = query_embeddings[0] if query_embeddings else None
+        scored = sorted(
+            (
+                (_cosine_similarity(qe, d["embedding"]), d)
+                for d in self._docs
+                if d["embedding"] is not None
+            ),
+            key=lambda x: x[0],
+            reverse=True,
+        )[:n_results]
+        return {
+            "documents": [[d["document"] for _, d in scored]],
+            "metadatas": [[d["metadata"] for _, d in scored]],
+            "distances": [[1 - s for s, _ in scored]],
+        }
+
+
+class _MemoryClient:
+    """In-memory ChromaDB client stand-in for serverless deployments."""
+
+    def __init__(self):
+        self._collections = {}
+
+    def get_or_create_collection(self, name, metadata=None):
+        if name not in self._collections:
+            self._collections[name] = _MemoryCollection(name)
+        return self._collections[name]
+
+
+def _try_create_real_client():
+    """Return a real ChromaDB PersistentClient if the package is installed."""
+    try:
+        import chromadb
+        from chromadb.config import Settings as ChromaSettings
+
+        return chromadb.PersistentClient(
             path=settings.CHROMA_PERSIST_DIR,
             settings=ChromaSettings(anonymized_telemetry=False),
         )
+    except Exception as e:
+        logger.warning(f"ChromaDB unavailable ({e}); using in-memory vector store")
+        return None
+
+
+def get_chroma_client():
+    """Return a ChromaDB client (real when installed, in-memory otherwise)."""
+    global _client
+    if _client is None:
+        _client = _try_create_real_client() or _MemoryClient()
     return _client
 
 
-def get_or_create_collection(name: str) -> chromadb.Collection:
+def get_or_create_collection(name: str):
     client = get_chroma_client()
     return client.get_or_create_collection(
         name=name,
@@ -61,9 +132,12 @@ def upsert_internship(internship_id: int, description: str, embedding: list) -> 
 
 def search_similar_internships(cv_embedding: list, top_k: int = 5) -> list:
     col = get_or_create_collection(COLLECTION_JOBS)
+    n = col.count()
+    if n == 0:
+        return []
     results = col.query(
         query_embeddings=[cv_embedding],
-        n_results=min(top_k, col.count() or 1),
+        n_results=min(top_k, n),
         include=["documents", "metadatas", "distances"],
     )
     matches = []

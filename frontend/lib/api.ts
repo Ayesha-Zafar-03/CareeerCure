@@ -136,6 +136,11 @@ export const cvApi = {
     });
     return response;
   },
+
+  generatePdf: (cv_text: string, full_name: string = "") =>
+    api.post("/api/cv/generate-pdf", { cv_text, full_name }, {
+      responseType: "blob",
+    }),
   
   preview: () => api.get("/api/cv/preview"),
 };

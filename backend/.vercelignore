@@ -1,0 +1,27 @@
+# Keep the bundle small
+venv/
+chroma_data/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Not needed at runtime
+tests/
+test_*.py
+seed*.py
+seed_real_data.py
+add_indexes.py
+update_schema.py
+reset_db.py
+create_admin.py
+make_admin.py
+setup_test_user.py
+activate_user.py
+speed_test2.py
+create_admin.py
+Dockerfile
+
+# Secrets / local
+.env
+.env.local

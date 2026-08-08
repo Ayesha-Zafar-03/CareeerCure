@@ -196,25 +196,6 @@ function parseCvLines(cleanText: string): ParsedLine[] {
   return result;
 }
 
-function generateCvHtml(inlines: ParsedLine[], name: string): string {
-  let body = "";
-  for (const pl of inlines) {
-    if (pl.type === "empty") { body += "<div style='height:0.35rem'></div>"; }
-    else if (pl.type === "name") { body += `<h1 style='font-family:Georgia,Times,serif;font-size:1.6rem;font-weight:600;color:#0b2443;text-align:center;margin-bottom:0.2rem;margin-top:0.15rem'>${escHtml(pl.text)}</h1>`; }
-    else if (pl.type === "contact") { body += `<p style='font-size:0.8rem;color:#0b244399;text-align:center;margin-bottom:0.5rem;font-weight:300'>${escHtml(pl.text)}</p>`; }
-    else if (pl.type === "section") { body += `<div style='margin-top:1rem;margin-bottom:0.4rem'><h3 style='font-size:0.9rem;font-weight:800;color:#0b2443;text-transform:uppercase;letter-spacing:0.08em;font-family:monospace'>${escHtml(pl.text)}</h3><div style='height:2px;background:#b2892e55;margin-top:0.25rem;border-radius:1px'></div></div>`; }
-    else if (pl.type === "bullet") { const clean = pl.text.replace(/^[•\-\*▪\d.)]\s*/, ""); body += `<p style='font-size:0.85rem;color:#0b2443cc;padding-left:0.8rem;margin-bottom:0.35rem;line-height:1.5'><span style='color:#0b2443;margin-right:0.25rem'>•</span>${escHtml(clean)}</p>`; }
-    else if (pl.type === "important") { body += `<p style='font-size:0.85rem;color:#0b2443;font-weight:600;margin-bottom:0.35rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
-    else { body += `<p style='font-size:0.85rem;color:#0b2443b3;margin-bottom:0.15rem;line-height:1.5'>${escHtml(pl.text)}</p>`; }
-  }
-  const n = name || "CV";
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escHtml(n)} - CV</title><style>@page{margin:0.6in}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0b2443;max-width:750px;margin:0 auto;padding:1rem;background:white}*{box-sizing:border-box}@media print{body{padding:0;max-width:100%}}</style></head><body>${body}</body></html>`;
-}
-
-function escHtml(s: string): string {
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
 function ATSScore({ score, label }: { score: number; label: string }) {
   const getScoreColors = (score: number) => {
     if (score >= 85) return { text: "text-accent", border: "border-accent/40" };
@@ -248,30 +229,23 @@ function CVDisplay({ text, fullName, showDownload = true }: { text: string; full
     try {
       const caption = displayName || extractNameFromText(cleanCvText(text)) || "CV";
       const filename = sanitizeFilename(caption) + "_CV.pdf";
-      const pdfWin = window.open("", "_blank");
-      if (!pdfWin) {
-        const blob = new Blob([generateCvHtml(parsedLines, displayName)], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename.replace(".pdf", ".html");
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return;
-      }
-      pdfWin.document.write(generateCvHtml(parsedLines, displayName));
-      pdfWin.document.close();
-      pdfWin.document.title = caption + " CV";
-      setTimeout(() => { pdfWin.print(); }, 500);
+      const res = await cvApi.generatePdf(cleanText, caption);
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error: any) {
       console.error("PDF download error:", error);
       alert("PDF generation failed. Please try again.");
     } finally {
       setPdfLoading(false);
     }
-  }, [text, displayName, parsedLines]);
+  }, [text, displayName, cleanText]);
 
   return (
     <div className="bg-surface border border-line rounded-lg shadow-sm transition-shadow hover:shadow">
@@ -471,6 +445,7 @@ function AnalyseTab() {
       return;
     }
     setFile(f);
+    setAnalysis(null);
     setError("");
   };
 
@@ -488,7 +463,7 @@ function AnalyseTab() {
     }
   };
 
-  const resetUpload = () => { setFile(null); setError(""); };
+  const resetUpload = () => { setFile(null); setAnalysis(null); setError(""); };
 
   return (
     <div className="space-y-6">

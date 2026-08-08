@@ -40,6 +40,11 @@ class CVRebuildRequest(BaseModel):
     target_role: Optional[str] = ""
 
 
+class CVPDFRequest(BaseModel):
+    cv_text: str
+    full_name: Optional[str] = ""
+
+
 @router.post("/upload")
 async def upload_cv(
     file: UploadFile = File(...),
@@ -227,6 +232,31 @@ def download_cv_as_pdf(
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+@router.post("/generate-pdf")
+def generate_cv_pdf_endpoint(
+    request: CVPDFRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a PDF from the supplied CV text (used for freshly generated/rebuilt CVs)."""
+    if not request.cv_text or not request.cv_text.strip():
+        raise HTTPException(status_code=400, detail="CV text is empty. Nothing to download.")
+    
+    try:
+        pdf_bytes = generate_cv_pdf(request.cv_text, request.full_name or current_user.full_name or "CV")
+        
+        pdf_name = request.full_name or "CV"
+        safe_name = pdf_name.replace(' ', '_').replace('.', '').lower()
+        filename = f"{safe_name}_cv.pdf"
+        
+        return StreamingResponse(
+            BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
