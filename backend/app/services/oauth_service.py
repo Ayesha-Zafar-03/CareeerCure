@@ -52,6 +52,8 @@ class OAuthService:
     async def exchange_google_code(code: str) -> Optional[Dict[str, Any]]:
         """Exchange Google authorization code for user info"""
         try:
+            logger.info("Starting Google code exchange...")
+            
             # Exchange code for access token
             token_url = "https://oauth2.googleapis.com/token"
             token_data = {
@@ -62,8 +64,16 @@ class OAuthService:
                 "redirect_uri": f"{settings.BACKEND_URL}/api/auth/google/callback"
             }
             
+            logger.info(f"Token exchange redirect_uri: {token_data['redirect_uri']}")
+            
             async with httpx.AsyncClient() as client:
                 token_response = await client.post(token_url, data=token_data)
+                
+                if token_response.status_code != 200:
+                    logger.error(f"Google token exchange failed with status {token_response.status_code}")
+                    logger.error(f"Response: {token_response.text}")
+                    return None
+                
                 token_response.raise_for_status()
                 token_json = token_response.json()
                 
@@ -72,13 +82,23 @@ class OAuthService:
                     logger.error("No access token received from Google")
                     return None
                 
+                logger.info("Successfully received access token from Google")
+                
                 # Get user info
                 user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
                 headers = {"Authorization": f"Bearer {access_token}"}
                 
                 user_response = await client.get(user_info_url, headers=headers)
+                
+                if user_response.status_code != 200:
+                    logger.error(f"Google user info fetch failed with status {user_response.status_code}")
+                    logger.error(f"Response: {user_response.text}")
+                    return None
+                
                 user_response.raise_for_status()
                 user_data = user_response.json()
+                
+                logger.info(f"Successfully retrieved user info for: {user_data.get('email')}")
                 
                 return {
                     "id": user_data.get("id"),
@@ -88,8 +108,11 @@ class OAuthService:
                     "provider": "google"
                 }
                 
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error exchanging Google code: {e.response.status_code} - {e.response.text}")
+            return None
         except Exception as e:
-            logger.error(f"Error exchanging Google code: {str(e)}")
+            logger.error(f"Error exchanging Google code: {str(e)}", exc_info=True)
             return None
     
     @staticmethod

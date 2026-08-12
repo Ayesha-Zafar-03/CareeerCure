@@ -403,15 +403,25 @@ async def linkedin_auth():
 async def google_callback(code: str, db: Session = Depends(get_db)):
     """Handle Google OAuth callback"""
     try:
+        logger.info(f"Google OAuth callback received with code: {code[:20]}...")
+        
         # Exchange code for user info
         user_data = await OAuthService.exchange_google_code(code)
         if not user_data:
-            raise HTTPException(status_code=400, detail="Failed to authenticate with Google")
+            logger.error("Failed to exchange Google code for user data")
+            error_url = f"{settings.FRONTEND_URL}/auth/error?message=Failed to get user info from Google"
+            return RedirectResponse(url=error_url)
+        
+        logger.info(f"Successfully retrieved user data for email: {user_data.get('email')}")
         
         # Create or get user
         user = OAuthService.create_or_get_user(user_data, db)
         if not user:
-            raise HTTPException(status_code=400, detail="Failed to create user account")
+            logger.error(f"Failed to create or get user for email: {user_data.get('email')}")
+            error_url = f"{settings.FRONTEND_URL}/auth/error?message=Failed to create user account"
+            return RedirectResponse(url=error_url)
+        
+        logger.info(f"User authenticated successfully: {user.email}")
         
         # Generate JWT token
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -421,8 +431,10 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         return RedirectResponse(url=redirect_url)
         
     except Exception as e:
-        logger.error(f"Google OAuth callback error: {str(e)}")
-        error_url = f"{settings.FRONTEND_URL}/auth/error?message=Google authentication failed"
+        logger.error(f"Google OAuth callback error: {str(e)}", exc_info=True)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        error_url = f"{settings.FRONTEND_URL}/auth/error?message=Google authentication failed - check server logs"
         return RedirectResponse(url=error_url)
 
 
