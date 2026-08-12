@@ -43,14 +43,13 @@ const KNOWN_SECTIONS = [
   "LEADERSHIP", "VOLUNTEERING", "VOLUNTEER EXPERIENCE",
   "REFERENCES", "ADDITIONAL INFORMATION"
 ];
-const SECTION_LOWER = new Set(KNOWN_SECTIONS.map(s => s.toLowerCase()));
 
 function isSectionLine(line: string): boolean {
   const u = line.toUpperCase().trim();
   if (u.length < 3 || u.length > 50) return false;
-  const exact = SECTION_LOWER.has(u);
+  const exact = KNOWN_SECTIONS.includes(u);
   if (exact) return true;
-  const startsWith = Array.from(SECTION_LOWER).some(k => u.startsWith(k + ":") || u.startsWith(k + " ") || u.startsWith(k + "\t"));
+  const startsWith = KNOWN_SECTIONS.some(k => u.startsWith(k + ":") || u.startsWith(k + " ") || u.startsWith(k + "\t"));
   if (startsWith) return true;
   if (u === u && line.trim() === u && u.length >= 4 && u.length <= 45 && !line.includes("@") && !line.includes("|") && !line.includes("http") && !line.includes("•") && !line.startsWith("-") && !line.startsWith("*") && !line.match(/^\d/) && !line.includes("(") && !line.includes(")") && !line.includes(";") && !line.includes(",")) {
     const lower = line.trim().toLowerCase();
@@ -465,6 +464,29 @@ function AnalyseTab() {
 
   const resetUpload = () => { setFile(null); setAnalysis(null); setError(""); };
 
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const downloadPdf = useCallback(async () => {
+    setPdfLoading(true);
+    try {
+      const res = await cvApi.downloadPdf();
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = analysis?.filename ? analysis.filename.replace(/\.(txt|pdf)$/i, "") + "_CV.pdf" : "CV.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error("PDF download error:", err);
+      alert("PDF generation failed. Please try again.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [analysis?.filename]);
+
   return (
     <div className="space-y-6">
       <div className="bg-surface border border-line rounded-lg p-6">
@@ -538,6 +560,14 @@ function AnalyseTab() {
               Continue to Dashboard
               <ArrowRightIcon className="w-4 h-4" />
             </Link>
+            <button
+              onClick={downloadPdf}
+              disabled={pdfLoading}
+              className="flex-1 bg-paper hover:bg-line/60 text-primary font-medium py-3 px-4 rounded-lg transition-colors border border-line flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <FileDownIcon className="w-4 h-4" />
+              {pdfLoading ? "Preparing..." : "Download PDF"}
+            </button>
             <button
               onClick={resetUpload}
               className="flex-1 bg-paper hover:bg-line/60 text-primary font-medium py-3 px-4 rounded-lg transition-colors border border-line"

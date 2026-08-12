@@ -1434,12 +1434,13 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
     """
     from io import BytesIO
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.units import cm
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
-    from reportlab.lib.enums import TA_LEFT, TA_CENTER
+    from reportlab.lib.enums import TA_CENTER
     import html
+    import re
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -1452,6 +1453,7 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
     )
 
     PRIMARY = colors.HexColor("#659287")
+    LIGHT_PRIMARY = colors.HexColor("#B1D3B9")
     DARK = colors.HexColor("#111827")
     GRAY = colors.HexColor("#6b7280")
 
@@ -1462,7 +1464,7 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
         textColor=PRIMARY,
         alignment=TA_CENTER,
         spaceAfter=4,
-        spaceBefore=8
+        spaceBefore=8,
     )
 
     contact_style = ParagraphStyle(
@@ -1472,7 +1474,7 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
         textColor=GRAY,
         alignment=TA_CENTER,
         spaceAfter=14,
-        spaceBefore=2
+        spaceBefore=2,
     )
 
     section_style = ParagraphStyle(
@@ -1491,7 +1493,6 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
         textColor=DARK,
         leading=13,
         spaceAfter=2,
-        leftIndent=0
     )
 
     bullet_style = ParagraphStyle(
@@ -1502,7 +1503,7 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
         leading=13,
         spaceAfter=2,
         leftIndent=14,
-        bulletIndent=6
+        bulletIndent=6,
     )
 
     job_title_style = ParagraphStyle(
@@ -1511,116 +1512,223 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
         fontName="Helvetica-Bold",
         textColor=DARK,
         spaceAfter=1,
-        spaceBefore=4
+        spaceBefore=4,
     )
 
-    clean_text = cv_text
-    if isinstance(clean_text, dict) and 'cv_text' in clean_text:
-        clean_text = clean_text['cv_text']
-
-    clean_text = clean_text.replace('\\n', '\n').replace('\\t', '    ').replace('\\"', '"').replace('\\\\', '\\')
-
-    story = []
-    lines = clean_text.strip().split("\n")
+    company_style = ParagraphStyle(
+        "Company",
+        fontSize=9.5,
+        fontName="Helvetica-Oblique",
+        textColor=GRAY,
+        spaceAfter=3,
+    )
 
     SECTION_KEYWORDS = [
-        "PROFESSIONAL SUMMARY", "SUMMARY", "OBJECTIVE", "PROFILE",
+        "PROFESSIONAL SUMMARY", "SUMMARY", "CAREER OBJECTIVE", "OBJECTIVE", "PROFILE",
         "EDUCATION", "ACADEMIC BACKGROUND",
-        "PROFESSIONAL EXPERIENCE", "WORK EXPERIENCE", "EXPERIENCE", "EMPLOYMENT",
-        "TECHNICAL SKILLS", "SKILLS", "CORE COMPETENCIES", "EXPERTISE",
-        "KEY PROJECTS", "PROJECTS", "PROJECT EXPERIENCE",
-        "CERTIFICATIONS", "CERTIFICATES", "PROFESSIONAL DEVELOPMENT",
+        "PROFESSIONAL EXPERIENCE", "WORK EXPERIENCE", "RELEVANT EXPERIENCE", "EXPERIENCE", "EMPLOYMENT",
+        "TECHNICAL SKILLS", "SKILLS", "CORE COMPETENCIES", "KEY SKILLS", "EXPERTISE",
+        "KEY PROJECTS", "PROJECTS", "PROJECT EXPERIENCE", "ACADEMIC PROJECTS",
+        "CERTIFICATIONS", "CERTIFICATES", "LICENSES", "PROFESSIONAL DEVELOPMENT",
         "ACHIEVEMENTS", "ACCOMPLISHMENTS", "AWARDS", "HONORS",
         "LANGUAGES", "LANGUAGE SKILLS",
         "VOLUNTEER EXPERIENCE", "VOLUNTEER", "COMMUNITY SERVICE",
         "PUBLICATIONS", "RESEARCH", "PATENTS",
-        "REFERENCES", "CONTACT", "ADDITIONAL INFORMATION"
+        "REFERENCES", "CONTACT", "ADDITIONAL INFORMATION", "LEADERSHIP", "ACTIVITIES", "INTERESTS",
     ]
 
-    processed_name = False
-    current_section = None
-    hr_added_for_section = False
+    def escape_html(text: str) -> str:
+        # Remove control characters that ReportLab cannot handle
+        text = "".join(ch for ch in text if ord(ch) >= 32 or ch in "\t")
+        return html.escape(text, quote=False)
 
-    for i, line in enumerate(lines):
+    def strip_section_prefix(text: str) -> str:
+        # Handle "1. ", "1)", "# ", "** ", "- " numbering / markdown prefixes
+        return re.sub(r'^(?:\d+[.)]\s*|#+\s*|\*\*+\s*|[-–—]\s+)+', '', text).strip().rstrip('#*').strip()
+
+    def is_section_line(line: str) -> bool:
+        candidate = strip_section_prefix(line).rstrip(':').strip()
+        if not candidate:
+            return False
+        upper = candidate.upper()
+        for keyword in SECTION_KEYWORDS:
+            if upper == keyword or upper.startswith(keyword + ":") or upper.startswith(keyword + " "):
+                return True
+        # Generic ALL-CAPS header heuristic (e.g. "SKILLS", "INTERNSHIPS", "FREELANCE WORK")
+        if upper in ("RESUME", "CV", "CURRICULUM VITAE"):
+            return False
+        if candidate.isupper() and 3 <= len(candidate) <= 45:
+            if not any(ch in candidate for ch in '@|•()/\\,;'):
+                if not any(ch.isdigit() for ch in candidate):
+                    if not candidate.startswith(('-', '*')):
+                        lower = candidate.lower()
+                        if any(w in lower for w in (
+                            'university', 'college', 'institute', 'school', 'company',
+                            'certified', 'certificate', 'certification', 'achievement'
+                        )):
+                            return False
+                        if any(w in lower for w in (
+                            'the ', 'and ', 'for ', 'with ', 'from ', 'this ', 'that ',
+                            'have ', 'been ', 'will ', 'ltd', 'inc', 'corp', 'pvt', 'llc',
+                            'phone', 'email', 'web', 'www'
+                        )):
+                            return False
+                        return True
+        return False
+
+    def is_contact_line(line: str) -> bool:
+        if len(line) > 150:
+            return False
+        lower = line.lower()
+        if '@' in line or '|' in line or 'linkedin' in lower or lower.startswith(('http', 'www.')):
+            return True
+        if sum(1 for ch in line if ch.isdigit()) >= 8 and len(line) < 80:
+            return True
+        return False
+
+    def is_bullet_line(line: str) -> bool:
+        if line.startswith(('•', '·', '▪', '●', '○')):
+            return True
+        if line.startswith(('-', '*')) and not (line.startswith('-') and len(set(line)) == 1 and len(line) > 3):
+            return True
+        return bool(re.match(r'^\d+[.)]\s', line))
+
+    def is_job_title(line: str) -> bool:
+        if len(line) > 110 or any(ch in line for ch in '@|•'):
+            return False
+        lower = line.lower()
+        role_words = (
+            'engineer', 'developer', 'analyst', 'manager', 'intern', 'associate',
+            'specialist', 'scientist', 'designer', 'architect', 'consultant',
+            'coordinator', 'director', 'head', 'trainee', 'executive', 'officer',
+            'supervisor', 'administrator', 'lead',
+        )
+        degree_words = (
+            'bachelor', 'master', 'phd', 'degree', 'bs ', 'ba ', 'ms ', 'ma ',
+            'mba', 'b.sc', 'bsc', 'm.sc', 'msc',
+        )
+        if any(w in lower for w in role_words):
+            if len(line) <= 70 and line.count(' ') <= 10:
+                return True
+        if any(w in lower for w in degree_words):
+            return True
+        return False
+
+    def is_company_line(line: str) -> bool:
+        return (len(line) <= 80 and
+                ',' in line and
+                bool(re.search(r'\b(?:19|20)\d{2}\b', line)) and
+                not is_job_title(line))
+
+    clean_text = cv_text
+    if isinstance(clean_text, dict) and 'cv_text' in clean_text:
+        clean_text = clean_text['cv_text']
+    if not isinstance(clean_text, str):
+        clean_text = str(clean_text)
+
+    clean_text = (clean_text
+                  .replace('\\n', '\n')
+                  .replace('\\t', '    ')
+                  .replace('\\"', '"')
+                  .replace('\\\\', '\\')
+                  .replace('\r\n', '\n')
+                  .replace('\r', '\n'))
+
+    lines = [line for line in clean_text.split("\n") if line.strip() or True]
+
+    NAME_EXCLUDE_WORDS = {
+        "SUMMARY", "PROFILE", "OBJECTIVE", "EDUCATION", "EXPERIENCE", "SKILLS",
+        "PROJECTS", "CERTIFICATIONS", "ACHIEVEMENTS", "LANGUAGES", "REFERENCES",
+        "HONORS", "AWARDS", "VOLUNTEER", "PUBLICATIONS", "RESEARCH", "CONTACT",
+        "LEADERSHIP", "WORK", "ABOUT", "INTERESTS", "ACTIVITIES", "PROFESSIONAL",
+    }
+
+    # Pre-detect the name from the first few lines so it renders as a header.
+    detected_name = None
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if is_contact_line(stripped):
+            continue
+        words = stripped.split()
+        if 2 <= len(words) <= 6 and len(stripped) <= 60:
+            clean_words = [w.replace('.', '').replace('-', '').replace("'", "") for w in words]
+            if all(w.isalpha() for w in clean_words) and not any(w.upper() in NAME_EXCLUDE_WORDS for w in words):
+                detected_name = stripped
+                break
+        if is_section_line(stripped):
+            # Reached a real section header before finding a name — stop looking.
+            break
+
+    full_name = (full_name or "").strip()
+    name = detected_name or (full_name if full_name and full_name.lower() not in ("cv", "cv text") else None)
+
+    story = []
+    if name:
+        story.append(Paragraph(escape_html(name), name_style))
+        story.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY, spaceAfter=6, spaceBefore=2))
+
+    name_skipped = False
+    contact_count = 0
+    last_was_section = False
+
+    for line in lines:
         stripped = line.strip()
 
-        # Skip empty lines but add spacing when inside a section
         if not stripped:
-            if current_section:
+            if last_was_section:
                 story.append(Spacer(1, 3))
+                last_was_section = False
             continue
 
         # Skip ASCII dash-only lines (used as visual separators in some formats)
         if stripped.startswith('-') and len(set(stripped)) == 1 and len(stripped) > 3:
             continue
 
-        upper = stripped.upper()
-
-        # Name detection: first non-empty, non-contact, non-section line
-        if not processed_name and not '@' in stripped and not '|' in stripped and not upper in SECTION_KEYWORDS:
-            safe_name = html.escape(stripped)
-            story.append(Paragraph(safe_name, name_style))
-            story.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY, spaceAfter=6, spaceBefore=2))
-            processed_name = True
-            current_section = None
+        # Skip the line already rendered as the name
+        if detected_name and not name_skipped and stripped == detected_name:
+            name_skipped = True
             continue
 
         # Contact information
-        if ('|' in stripped and len(stripped) < 150) or ('@' in stripped and len(stripped) < 100):
-            safe_contact = html.escape(stripped)
-            story.append(Paragraph(safe_contact, contact_style))
+        if is_contact_line(stripped) and contact_count < 3:
+            story.append(Paragraph(escape_html(stripped), contact_style))
+            contact_count += 1
+            last_was_section = False
             continue
 
-        # Section header detection
-        is_section = False
-        for keyword in SECTION_KEYWORDS:
-            if upper == keyword or upper.startswith(keyword + ":") or upper.startswith(keyword + " "):
-                is_section = True
-                current_section = keyword
-                break
-
-        if not is_section and stripped.isupper() and 5 <= len(stripped) <= 40 and not stripped.startswith('•'):
-            is_section = True
-            current_section = stripped
-
-        if is_section:
-            safe_section = html.escape(stripped)
+        # Section header
+        if is_section_line(stripped):
             story.append(Spacer(1, 6))
-            story.append(Paragraph(safe_section, section_style))
-            story.append(HRFlowable(width="100%", thickness=0.6, color=colors.HexColor("#B1D3B9"), spaceAfter=4, spaceBefore=1))
-            hr_added_for_section = True
+            story.append(Paragraph(escape_html(strip_section_prefix(stripped)), section_style))
+            story.append(HRFlowable(width="100%", thickness=0.6, color=LIGHT_PRIMARY, spaceAfter=4, spaceBefore=1))
+            last_was_section = True
             continue
 
         # Bullet points
-        if stripped.startswith(("•", "-", "*", "·", "▪")):
-            clean_bullet = stripped.lstrip("•-*·▪ ").strip()
+        if is_bullet_line(stripped):
+            clean_bullet = re.sub(r'^\d+[.)]\s*', '', stripped.lstrip('•·▪●○-*').strip())
             if clean_bullet:
-                safe_bullet = html.escape(clean_bullet)
-                story.append(Paragraph(f"• {safe_bullet}", bullet_style))
+                story.append(Paragraph(f"• {escape_html(clean_bullet)}", bullet_style))
+            last_was_section = False
             continue
 
-        # Job titles, company names, degrees (important lines)
-        is_title = False
-        title_indicators = [
-            'engineer', 'developer', 'analyst', 'manager', 'intern', 'associate', 'specialist',
-            'bachelor', 'master', 'phd', 'degree', 'university', 'college', 'institute',
-            'company', 'corp', 'inc', 'ltd', 'technologies', 'systems', 'solutions', 'group'
-        ]
+        # Job titles, degrees (important lines)
+        if is_job_title(stripped):
+            story.append(Paragraph(escape_html(stripped), job_title_style))
+            last_was_section = False
+            continue
 
-        if (len(stripped) < 110 and
-            any(indicator in stripped.lower() for indicator in title_indicators) and
-            not stripped.startswith('•')):
-            is_title = True
-
-        if is_title:
-            safe_title = html.escape(stripped)
-            story.append(Paragraph(safe_title, job_title_style))
+        # Company / institution lines (e.g. "FAST NUCES, Lahore, 2020 - 2024")
+        if is_company_line(stripped):
+            story.append(Paragraph(escape_html(stripped), company_style))
+            last_was_section = False
             continue
 
         # Regular body text
-        if stripped:
-            safe_body = html.escape(stripped)
-            story.append(Paragraph(safe_body, body_style))
+        story.append(Paragraph(escape_html(stripped), body_style))
+        last_was_section = False
 
     try:
         doc.build(story)
@@ -1632,23 +1740,26 @@ def generate_cv_pdf(cv_text: str, full_name: str = "CV") -> bytes:
 
 def create_fallback_pdf(text: str, full_name: str) -> bytes:
     """Create a simple fallback PDF if main generation fails"""
+    import html as _html
     from io import BytesIO
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import SimpleDocTemplate, Paragraph
     from reportlab.lib.units import cm
-    
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
-    
+
     styles = getSampleStyleSheet()
     story = []
-    
+
     # Split text into paragraphs and add to story
-    paragraphs = text.split('\n')
+    paragraphs = (text or '').split('\n')
     for para in paragraphs:
-        if para.strip():
-            story.append(Paragraph(para.strip(), styles['Normal']))
-    
+        para = para.strip()
+        if para:
+            para = "".join(ch for ch in para if ord(ch) >= 32 or ch in "\t")
+            story.append(Paragraph(_html.escape(para, quote=False), styles['Normal']))
+
     doc.build(story)
     return buffer.getvalue()
