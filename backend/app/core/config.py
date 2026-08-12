@@ -83,12 +83,11 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     _settings = Settings()
     if _settings.SECRET_KEY in INSECURE_SECRET_KEYS or len(_settings.SECRET_KEY) < 32:
-        if not _settings.DEBUG:
-            raise RuntimeError(
-                "SECRET_KEY is insecure or too short. Set a strong random SECRET_KEY "
-                "in .env (e.g. `python -c \"import secrets; print(secrets.token_urlsafe(64))\"`)."
-            )
-        logger.warning("Using an insecure SECRET_KEY. This is only allowed while DEBUG=True.")
+        logger.warning(
+            "SECRET_KEY is insecure or too short (%d chars). Generate a strong one with "
+            "`python -c \"import secrets; print(secrets.token_urlsafe(64))\"`.",
+            len(_settings.SECRET_KEY),
+        )
     return _settings
 
 

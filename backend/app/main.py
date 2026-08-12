@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from app.core.config import settings
+from app.core.config import settings, INSECURE_SECRET_KEYS
+from app.core.database import engine
 from app.core.database import create_tables, init_db_pool
 from app.core.rate_limit import limiter
 from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan
@@ -83,4 +84,25 @@ def root():
 
 @app.get("/health", tags=["Health"])
 def health():
-    return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+    from sqlalchemy import text
+    db_ok = False
+    db_error = None
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        db_error = str(e)[:200]
+    return {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "debug": settings.DEBUG,
+        "env": {
+            "DATABASE_URL": "SET" if settings.DATABASE_URL and "localhost" not in settings.DATABASE_URL else settings.DATABASE_URL,
+            "SECRET_KEY": "SET" if settings.SECRET_KEY not in INSECURE_SECRET_KEYS and len(settings.SECRET_KEY) >= 32 else "INSECURE",
+            "GROQ_API_KEY": "SET" if settings.GROQ_API_KEY else "MISSING",
+            "ALLOWED_ORIGINS": settings.ALLOWED_ORIGINS[:60],
+        },
+        "database": {"ok": db_ok, "error": db_error},
+    }
