@@ -22,9 +22,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
     logger.info("Starting CareerCure API...")
-    create_tables()
-    init_db_pool()
-    logger.info("Database tables ready")
+    try:
+        create_tables()
+        init_db_pool()
+        logger.info("Database tables ready")
+    except Exception as e:
+        logger.error("Database startup failed, continuing without DB: %s", e)
     yield
     logger.info("Shutting down CareerCure API")
 
@@ -80,4 +83,4 @@ def root():
 
 @app.get("/health", tags=["Health"])
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
