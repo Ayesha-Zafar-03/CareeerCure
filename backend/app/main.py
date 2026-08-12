@@ -103,6 +103,8 @@ def health():
             "SECRET_KEY": "SET" if settings.SECRET_KEY not in INSECURE_SECRET_KEYS and len(settings.SECRET_KEY) >= 32 else "INSECURE",
             "GROQ_API_KEY": "SET" if settings.GROQ_API_KEY else "MISSING",
             "ALLOWED_ORIGINS": settings.ALLOWED_ORIGINS[:60],
+            "BACKEND_URL": settings.BACKEND_URL,
+            "FRONTEND_URL": settings.FRONTEND_URL,
         },
         "database": {"ok": db_ok, "error": db_error},
     }
