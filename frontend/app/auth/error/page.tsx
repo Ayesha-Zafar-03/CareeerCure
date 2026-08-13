@@ -11,7 +11,7 @@ function AuthErrorContent() {
     <div className="min-h-screen bg-gradient-to-br from-paper via-primary/5 to-accent/5 flex items-center justify-center px-4">
       <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line text-center max-w-md w-full">
         <Link href="/" className="inline-block mb-6">
-          <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
+          <img src="/logo.png" alt="CareerCure" className="h-8 w-auto mx-auto" />
         </Link>
 
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">

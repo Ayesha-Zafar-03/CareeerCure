@@ -17,6 +17,8 @@ import {
   StarIcon,
   BookOpenIcon
 } from "lucide-react";
+import LandingHeader from "@/components/LandingHeader";
+import Footer from "@/components/Footer";
 
 const VantaBackground = dynamic(() => import("@/components/VantaBackground"), { ssr: false });
 
@@ -69,28 +71,7 @@ export default function LandingPage() {
       <VantaBackground />
       <div className="fixed inset-0 bg-gradient-to-br from-paper/90 via-surface/60 to-primary/10 -z-10" />
       <div className="relative z-10">
-      {/* Navbar */}
-      <nav className="border-b border-line/50 px-6 py-4 backdrop-blur-sm bg-surface/80 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 group">
-            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
-          </div>
-           <div className="flex items-center gap-3">
-            <a
-              href="/login" 
-              className="text-sm text-ink/60 hover:text-primary font-medium transition-colors duration-200 hover:scale-105 transform"
-            >
-              Login
-            </a>
-            <Link
-              href="/register"
-              className="bg-gradient-to-r from-primary to-primary-d hover:from-primary-d hover:to-primary-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
-            >
-              Get Started Free
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingHeader />
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center relative z-10">
@@ -159,7 +140,7 @@ export default function LandingPage() {
         </div>
 
         {/* Professional Animation Placeholder */}
-        <div className="mt-20 animate-fade-in-up" style={{animationDelay: '2s'}}>
+        <div id="testimonials" className="mt-20 animate-fade-in-up scroll-mt-20" style={{animationDelay: '2s'}}>
           <div className="bg-gradient-to-br from-primary/5 to-paper rounded-2xl p-12 text-center">
             <div className="flex justify-center mb-4">
               <RocketIcon className="w-16 h-16 text-primary animate-bounce" />
@@ -171,7 +152,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="bg-gradient-to-r from-paper to-primary/5 py-20 relative">
+      <section id="features" className="bg-gradient-to-r from-paper to-primary/5 py-20 relative scroll-mt-20">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-primary-dark mb-4 animate-fade-in-up">
@@ -208,7 +189,7 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits */}
-      <section className="max-w-7xl mx-auto px-6 py-20 relative">
+      <section id="how-it-works" className="max-w-7xl mx-auto px-6 py-20 relative scroll-mt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in-up">
             <h2 className="text-3xl font-bold text-primary-dark mb-6">
@@ -296,25 +277,35 @@ export default function LandingPage() {
         <div className="absolute top-1/4 right-0 w-32 h-32 bg-gradient-to-br from-primary/40 to-primary rounded-full opacity-10 animate-float blur-3xl"></div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-line/50 py-8 text-center text-sm text-ink/40 bg-gradient-to-r from-paper to-primary/5 relative">
-        <div className="relative z-10">
-          <p className="hover:text-primary transition-colors duration-300">
-            CareerCure — FYP Project by 
-            <span className="font-medium text-primary"> Ayesha Zafar, Eman & Hira Jawaid</span>
+      {/* Contact CTA */}
+      <section id="contact" className="border-t border-line/50 bg-gradient-to-r from-paper to-primary/5 py-20 scroll-mt-20">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-primary-dark mb-4">
+            Ready to launch your career?
+          </h2>
+          <p className="text-ink/60 mb-8">
+            Join CareerCure today and get personalised AI guidance — free for students and fresh graduates.
           </p>
-          <div className="mt-3 flex justify-center gap-3">
-            <SparklesIcon className="w-4 h-4 text-accent animate-bounce" />
-            <RocketIcon className="w-4 h-4 text-primary/40 animate-bounce" style={{animationDelay: '0.1s'}} />
-            <BriefcaseIcon className="w-4 h-4 text-primary animate-bounce" style={{animationDelay: '0.2s'}} />
-            <StarIcon className="w-4 h-4 text-primary/60 animate-bounce" style={{animationDelay: '0.3s'}} />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/register"
+              className="flex items-center gap-2 bg-primary hover:bg-primary-d text-white font-semibold px-8 py-3.5 rounded-xl transition-colors duration-200 text-lg shadow-md"
+            >
+              Get Started Free
+              <ArrowRightIcon className="w-5 h-5" />
+            </Link>
+            <Link
+              href="mailto:hello@careercure.app"
+              className="flex items-center gap-2 border-2 border-line hover:bg-primary/5 text-ink font-semibold px-8 py-3.5 rounded-xl transition-colors duration-200 text-lg"
+            >
+              Contact Us
+            </Link>
           </div>
         </div>
-        
-        {/* Subtle background animation */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse"></div>
-      </footer>
+      </section>
+
+      <Footer />
       </div>
       </div>
-    );
+  );
 }

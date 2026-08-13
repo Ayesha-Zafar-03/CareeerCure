@@ -168,7 +168,7 @@ export default function RegisterPage() {
             {/* Logo & Header */}
             <div className="text-center mb-8">
               <Link href="/" className="inline-block mb-6">
-                <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
+                <img src="/logo.png" alt="CareerCure" className="h-8 w-auto mx-auto" />
               </Link>
               <h1 className="text-2xl font-bold text-primary-dark mb-2">Create your account</h1>
               <p className="text-ink/60">Join CareerCure and take the next step in your career journey.</p>
@@ -366,7 +366,7 @@ export default function RegisterPage() {
           <div className="bg-surface rounded-2xl shadow-xl p-8 border border-line animate-fade-in-up">
             <div className="text-center mb-8">
               <Link href="/" className="inline-block mb-6">
-                <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto mx-auto" />
+                <img src="/logo.png" alt="CareerCure" className="h-8 w-auto mx-auto" />
               </Link>
               <h1 className="text-2xl font-bold text-primary-dark mb-2">Verify your email</h1>
               <p className="text-ink/60">

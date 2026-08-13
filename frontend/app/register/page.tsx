@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/lib/api";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
+import AuthBrandPanel from "@/components/AuthBrandPanel";
 import { BriefcaseIcon, EyeIcon, EyeOffIcon, MailIcon, CheckCircleIcon, LockIcon } from "lucide-react";
 
 type Step = "form" | "verify";
@@ -139,24 +140,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — brand */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary-dark relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
-        <div className="relative z-10 px-16 max-w-lg">
-          <Link href="/" className="flex items-center mb-8">
-            <img src="/logo.jpeg" alt="CareerCure" className="h-10 w-auto" />
-          </Link>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-            Start your<br />career journey
-          </h1>
-          <p className="text-white/60 text-base leading-relaxed">
-            Create an account to unlock personalized roadmaps, curated internships, and courses tailored to your goals.
-          </p>
-        </div>
-      </div>
+      <AuthBrandPanel
+        title={<>Start your<br />career journey</>}
+        subtitle="Create an account to unlock personalized roadmaps, curated internships, and courses tailored to your goals."
+      />
 
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper overflow-y-auto">
@@ -165,7 +152,7 @@ export default function RegisterPage() {
           <div className="animate-fade-in-up">
             {/* Mobile logo */}
             <Link href="/" className="lg:hidden block mb-10">
-              <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
+              <img src="/logo.png" alt="CareerCure" className="h-8 w-auto bg-transparent" />
             </Link>
 
             <div className="mb-8">

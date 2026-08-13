@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
         </div>
         <div className="relative z-10 px-16 max-w-lg">
           <Link href="/" className="flex items-center gap-3 mb-8">
-            <img src="/logo.jpeg" alt="CareerCure" className="h-10 w-auto" />
+            <img src="/logo.png" alt="CareerCure" className="h-10 w-auto" />
             <span className="font-mono text-[10px] tracking-widest uppercase text-cream/40">Admin</span>
           </Link>
           <h1 className="text-4xl font-bold text-cream leading-tight mb-4">
@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-cream-50">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-10">
-            <img src="/logo.jpeg" alt="CareerCure" className="h-8 w-auto" />
+            <img src="/logo.png" alt="CareerCure" className="h-8 w-auto" />
             <span className="font-mono text-[9px] tracking-widest uppercase text-navy/40 ml-1">Admin</span>
           </div>
 

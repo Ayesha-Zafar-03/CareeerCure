@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}>
         {/* Logo */}
         <div className="px-5 h-14 flex items-center gap-2.5 border-b border-cream/5">
-          <img src="/logo.jpeg" alt="CareerCure" className="h-6 w-auto" />
+          <img src="/logo.png" alt="CareerCure" className="h-6 w-auto" />
           <span className="font-mono text-[8px] tracking-widest uppercase text-cream/30">Admin</span>
         </div>
 
