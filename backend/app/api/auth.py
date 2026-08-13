@@ -1,6 +1,7 @@
 import random
 import string
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
@@ -407,9 +408,10 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         
         # Exchange code for user info
         user_data = await OAuthService.exchange_google_code(code)
-        if not user_data:
-            logger.error("Failed to exchange Google code for user data")
-            error_url = f"{settings.FRONTEND_URL}/auth/error?message=Failed to get user info from Google"
+        if not user_data or user_data.get("error"):
+            error_msg = user_data.get("error", "Failed to get user info from Google") if user_data else "Failed to get user info from Google"
+            logger.error(f"Failed to exchange Google code for user data: {error_msg}")
+            error_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/error?message={quote(error_msg)}"
             return RedirectResponse(url=error_url)
         
         logger.info(f"Successfully retrieved user data for email: {user_data.get('email')}")
@@ -418,7 +420,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         user = OAuthService.create_or_get_user(user_data, db)
         if not user:
             logger.error(f"Failed to create or get user for email: {user_data.get('email')}")
-            error_url = f"{settings.FRONTEND_URL}/auth/error?message=Failed to create user account"
+            error_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/error?message=Failed to create user account"
             return RedirectResponse(url=error_url)
         
         logger.info(f"User authenticated successfully: {user.email}")
@@ -427,14 +429,14 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         access_token = create_access_token(data={"sub": str(user.id)})
         
         # Redirect to frontend with token
-        redirect_url = f"{settings.FRONTEND_URL}/auth/success?token={access_token}"
+        redirect_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/success?token={access_token}"
         return RedirectResponse(url=redirect_url)
         
     except Exception as e:
         logger.error(f"Google OAuth callback error: {str(e)}", exc_info=True)
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
-        error_url = f"{settings.FRONTEND_URL}/auth/error?message=Google authentication failed - check server logs"
+        error_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/error?message=Google authentication failed - check server logs"
         return RedirectResponse(url=error_url)
 
 

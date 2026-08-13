@@ -51,8 +51,9 @@ ALLOWED_ORIGINS=https://<your-vercel-frontend-url>
 
 In Google Cloud Console → Credentials, add this to **Authorized redirect URIs**:
 ```
-https://<your-space-name>.hf.space/api/auth/oauth/google
+https://<your-space-name>.hf.space/api/auth/google/callback
 ```
+**Important**: the path must be exactly `/api/auth/google/callback` (no trailing slash, `https` only). This must match `{BACKEND_URL}/api/auth/google/callback` exactly or Google returns `redirect_uri_mismatch`.
 
 ## 4. Deploy Frontend on Vercel
 

@@ -4,6 +4,7 @@ OAuth service for Google and LinkedIn authentication
 
 import httpx
 from typing import Optional, Dict, Any
+from urllib.parse import urlencode
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.core.database import get_db
@@ -15,6 +16,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _clean_url(url: str) -> str:
+    """Normalize a base URL so redirect URIs never get a double slash."""
+    return url.strip().rstrip("/")
+
+
 class OAuthService:
     
     @staticmethod
@@ -23,15 +29,14 @@ class OAuthService:
         base_url = "https://accounts.google.com/o/oauth2/auth"
         params = {
             "client_id": settings.GOOGLE_CLIENT_ID,
-            "redirect_uri": f"{settings.BACKEND_URL}/api/auth/google/callback",
+            "redirect_uri": f"{_clean_url(settings.BACKEND_URL)}/api/auth/google/callback",
             "scope": "openid email profile",
             "response_type": "code",
             "access_type": "offline",
             "prompt": "consent"
         }
         
-        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
-        return f"{base_url}?{query_string}"
+        return f"{base_url}?{urlencode(params)}"
     
     @staticmethod
     def get_linkedin_auth_url() -> str:
@@ -39,14 +44,13 @@ class OAuthService:
         base_url = "https://www.linkedin.com/oauth/v2/authorization"
         params = {
             "client_id": settings.LINKEDIN_CLIENT_ID,
-            "redirect_uri": f"{settings.BACKEND_URL}/api/auth/linkedin/callback",
+            "redirect_uri": f"{_clean_url(settings.BACKEND_URL)}/api/auth/linkedin/callback",
             "scope": "r_liteprofile r_emailaddress",
             "response_type": "code",
             "state": "random_state_string"  # In production, use a secure random string
         }
         
-        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
-        return f"{base_url}?{query_string}"
+        return f"{base_url}?{urlencode(params)}"
     
     @staticmethod
     async def exchange_google_code(code: str) -> Optional[Dict[str, Any]]:
@@ -61,7 +65,7 @@ class OAuthService:
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": f"{settings.BACKEND_URL}/api/auth/google/callback"
+                "redirect_uri": f"{_clean_url(settings.BACKEND_URL)}/api/auth/google/callback"
             }
             
             logger.info(f"Token exchange redirect_uri: {token_data['redirect_uri']}")
@@ -72,7 +76,7 @@ class OAuthService:
                 if token_response.status_code != 200:
                     logger.error(f"Google token exchange failed with status {token_response.status_code}")
                     logger.error(f"Response: {token_response.text}")
-                    return None
+                    return {"error": f"Google token exchange failed ({token_response.status_code}): {token_response.text[:200]}"}
                 
                 token_response.raise_for_status()
                 token_json = token_response.json()
@@ -80,7 +84,7 @@ class OAuthService:
                 access_token = token_json.get("access_token")
                 if not access_token:
                     logger.error("No access token received from Google")
-                    return None
+                    return {"error": "No access token received from Google"}
                 
                 logger.info("Successfully received access token from Google")
                 
@@ -93,7 +97,7 @@ class OAuthService:
                 if user_response.status_code != 200:
                     logger.error(f"Google user info fetch failed with status {user_response.status_code}")
                     logger.error(f"Response: {user_response.text}")
-                    return None
+                    return {"error": f"Google user info fetch failed ({user_response.status_code})"}
                 
                 user_response.raise_for_status()
                 user_data = user_response.json()
@@ -109,11 +113,12 @@ class OAuthService:
                 }
                 
         except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error exchanging Google code: {e.response.status_code} - {e.response.text}")
-            return None
+            error_body = e.response.text[:300]
+            logger.error(f"HTTP error exchanging Google code: {e.response.status_code} - {error_body}")
+            return {"error": f"Google HTTP error {e.response.status_code}: {error_body}"}
         except Exception as e:
             logger.error(f"Error exchanging Google code: {str(e)}", exc_info=True)
-            return None
+            return {"error": f"Google exchange error: {str(e)}"}
     
     @staticmethod
     async def exchange_linkedin_code(code: str) -> Optional[Dict[str, Any]]:
