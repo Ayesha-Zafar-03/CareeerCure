@@ -30,7 +30,7 @@ export default function AuthBrandPanel({
 
       <div className="relative z-10 px-16 max-w-lg">
         <Link href="/" className="flex items-center gap-2 mb-10">
-          <img src="/logo.png" alt="CareerCure" className="h-10 w-auto bg-transparent" />
+          <img src="/logo-white.png" alt="CareerCure" className="h-10 w-auto bg-transparent" />
         </Link>
         <div className="inline-flex items-center gap-2 text-accent text-sm font-medium mb-4">
           <SparklesIcon className="w-4 h-4" />

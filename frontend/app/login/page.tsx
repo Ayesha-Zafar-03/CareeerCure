@@ -68,7 +68,7 @@ function LoginPageInner() {
         subtitle="Sign in to continue building your career with personalized roadmaps, internships, and courses."
       />
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper min-h-screen">
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-10">
             <img src="/logo.png" alt="CareerCure" className="h-8 w-auto bg-transparent" />

@@ -28,7 +28,7 @@ const FOOTER_SECTIONS = [
       { label: "Dashboard", href: "/dashboard" },
       { label: "How it Works", href: "/#how-it-works" },
       { label: "Features", href: "/#features" },
-      { label: "Help Center", href: "/#faq" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
@@ -43,9 +43,9 @@ const FOOTER_SECTIONS = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy Policy", href: "/#privacy" },
-      { label: "Terms of Service", href: "/#terms" },
-      { label: "Cookie Policy", href: "/#cookies" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Cookie Policy", href: "/cookies" },
     ],
   },
 ];
@@ -65,7 +65,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <img src="/logo.png" alt="CareerCure" className="h-9 w-auto bg-transparent" />
+              <img src="/logo-white.png" alt="CareerCure" className="h-9 w-auto bg-transparent" />
             </Link>
             <p className="text-sm text-white/60 leading-relaxed max-w-xs">
               Your AI-powered career companion. Analyse your CV, discover

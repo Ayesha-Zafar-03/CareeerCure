@@ -69,7 +69,7 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10 px-16 max-w-lg">
           <div className="flex items-center gap-3 mb-8">
-            <img src="/logo.png" alt="CareerCure" className="h-10 w-auto" />
+            <img src="/logo-white.png" alt="CareerCure" className="h-10 w-auto" />
             <span className="font-mono text-[10px] tracking-widest uppercase text-cream/40">Admin</span>
           </div>
           <h1 className="text-4xl font-bold text-cream leading-tight mb-4">

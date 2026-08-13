@@ -140,7 +140,7 @@ export default function LandingPage() {
         </div>
 
         {/* Professional Animation Placeholder */}
-        <div id="testimonials" className="mt-20 animate-fade-in-up scroll-mt-20" style={{animationDelay: '2s'}}>
+        <div className="mt-20 animate-fade-in-up scroll-mt-20" style={{animationDelay: '2s'}}>
           <div className="bg-gradient-to-br from-primary/5 to-paper rounded-2xl p-12 text-center">
             <div className="flex justify-center mb-4">
               <RocketIcon className="w-16 h-16 text-primary animate-bounce" />
@@ -277,6 +277,102 @@ export default function LandingPage() {
         <div className="absolute top-1/4 right-0 w-32 h-32 bg-gradient-to-br from-primary/40 to-primary rounded-full opacity-10 animate-float blur-3xl"></div>
       </section>
 
+      {/* Testimonials */}
+      <section id="testimonials" className="bg-gradient-to-r from-paper to-primary/5 py-20 scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-primary-dark mb-4">
+              Loved by students & graduates
+            </h2>
+            <p className="text-center text-ink/50 max-w-xl mx-auto">
+              See how CareerCure is helping the next generation launch their careers with confidence.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                quote:
+                  "CareerCure's CV analysis showed me exactly which skills to build. I landed a backend internship within a month!",
+                name: "Ayesha Zafar",
+                role: "CS Student",
+              },
+              {
+                quote:
+                  "The personalised roadmap kept me on track. The internship matches were scarily accurate to my profile.",
+                name: "Eman Abdul Khaliq",
+                role: "Fresh Graduate",
+              },
+              {
+                quote:
+                  "The AI career coach answered every doubt I had about switching fields. Genuinely felt like having a mentor.",
+                name: "Hira Jawaid",
+                role: "Career Switcher",
+              },
+            ].map((t) => (
+              <div
+                key={t.name}
+                className="bg-surface rounded-xl p-6 shadow-sm border border-line hover:shadow-md transition-shadow"
+              >
+                <div className="flex gap-1 text-accent mb-4">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <StarIcon key={i} className="w-4 h-4 fill-accent" />
+                  ))}
+                </div>
+                <p className="text-ink/80 leading-relaxed mb-6">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-primary-dark">{t.name}</p>
+                    <p className="text-xs text-ink/50">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About / Team */}
+      <section id="about" className="max-w-7xl mx-auto px-6 py-20 scroll-mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-primary-dark mb-4">About CareerCure</h2>
+            <p className="text-ink/60 leading-relaxed mb-4">
+              CareerCure is an AI-powered career development platform built for students and fresh
+              graduates. We combine CV analysis, semantic internship matching, and personalised
+              roadmaps to help you take the guesswork out of launching your career.
+            </p>
+            <p className="text-ink/60 leading-relaxed">
+              Our mission is to make expert career guidance accessible to everyone — free, fast, and
+              tailored to your goals.
+            </p>
+          </div>
+          <div id="team" className="scroll-mt-20">
+            <h3 className="text-xl font-semibold text-primary-dark mb-6">Meet the team</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { name: "Ayesha Zafar", role: "Co-Founder" },
+                { name: "Eman Abdul Khaliq", role: "Co-Founder" },
+                { name: "Hira Jawaid", role: "Co-Founder" },
+              ].map((m) => (
+                <div
+                  key={m.name}
+                  className="bg-surface rounded-xl p-5 shadow-sm border border-line text-center"
+                >
+                  <div className="w-14 h-14 mx-auto rounded-full bg-primary text-white flex items-center justify-center font-semibold text-lg mb-3">
+                    {m.name.charAt(0)}
+                  </div>
+                  <p className="text-sm font-semibold text-primary-dark">{m.name}</p>
+                  <p className="text-xs text-ink/50">{m.role}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Contact CTA */}
       <section id="contact" className="border-t border-line/50 bg-gradient-to-r from-paper to-primary/5 py-20 scroll-mt-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
@@ -294,12 +390,32 @@ export default function LandingPage() {
               Get Started Free
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
-            <Link
+            <a
               href="mailto:hello@careercure.app"
               className="flex items-center gap-2 border-2 border-line hover:bg-primary/5 text-ink font-semibold px-8 py-3.5 rounded-xl transition-colors duration-200 text-lg"
             >
               Contact Us
-            </Link>
+            </a>
+          </div>
+
+          <div id="careers" className="mt-12 pt-10 border-t border-line/50">
+            <p className="text-sm font-medium text-primary-dark mb-4">Get in touch with the team</p>
+            <ul className="flex flex-col sm:flex-row items-center justify-center gap-x-8 gap-y-3">
+              {[
+                "F2022065209@umt.edu.pk",
+                "Emanabdulkhaliq52@gmail.com",
+                "ayeshaaazafar2004@gmail.com",
+              ].map((email) => (
+                <li key={email}>
+                  <a
+                    href={`mailto:${email}`}
+                    className="text-sm text-ink/60 hover:text-accent transition-colors"
+                  >
+                    {email}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
