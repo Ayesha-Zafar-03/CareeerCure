@@ -402,12 +402,12 @@ function AnalysisResults({ analysis }: { analysis: CVAnalysis }) {
         <div className="bg-surface border border-line rounded-lg p-6 transition-shadow hover:shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <BriefcaseIcon className="w-5 h-5 text-accent" />
-            <h3 className="font-serif font-medium text-primary">Top Internship Matches</h3>
+            <h3 className="font-serif font-medium text-primary">Top Job Matches</h3>
           </div>
           <div className="space-y-3">
             {analysis.job_matches?.map((match: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 bg-paper rounded-lg border border-line transition-colors hover:border-primary/40">
-                <span className="text-sm text-primary/80 font-medium">Internship #{match.internship_id}</span>
+                <span className="text-sm text-primary/80 font-medium">Job #{match.internship_id}</span>
                 <span className="px-2 py-1 bg-accent/15 text-accent text-xs font-semibold rounded-full">
                   {(match.score * 100).toFixed(0)}% match
                 </span>

@@ -101,7 +101,7 @@ export default function InternshipsPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-navy">Internships</h1>
+          <h1 className="text-xl font-bold text-navy">Jobs</h1>
           <p className="text-xs text-navy/40 mt-0.5">{total} listings</p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-1.5">

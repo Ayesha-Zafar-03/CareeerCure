@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/internships", label: "Jobs" },
   { href: "/courses", label: "Courses" },
   { href: "/roadmap", label: "Roadmap" },
+  { href: "/applied", label: "Applied" },
   { href: "/chat", label: "Career Coach" },
 ];
 

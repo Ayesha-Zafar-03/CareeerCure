@@ -38,7 +38,7 @@ const FEATURES = [
   },
   {
     icon: BriefcaseIcon,
-    title: "Internship Matching",
+    title: "Job Matching",
     description: "Semantically matched internships based on your CV — ranked by how well they fit your profile.",
     color: "bg-primary/10 text-primary",
   },

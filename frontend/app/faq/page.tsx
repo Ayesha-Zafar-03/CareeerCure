@@ -45,7 +45,7 @@ export default function FaqPage() {
           title: "How are internships and courses matched?",
           content: (
             <p>
-              Internships are matched semantically against your CV profile using
+              Jobs are matched semantically against your CV profile using
               ChromaDB and ranked by fit. Courses are pulled from Udemy, Coursera,
               and edX and chosen to close the specific skill gaps we detect.
             </p>

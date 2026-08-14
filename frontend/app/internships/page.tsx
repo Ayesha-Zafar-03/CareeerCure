@@ -5,12 +5,12 @@ import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChatWidget from "@/components/ChatWidget";
 import JobCard from "@/components/jobs/JobCard";
-import { internshipsApi } from "@/lib/api";
+import { internshipsApi, applicationsApi } from "@/lib/api";
 import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
 import { CompassIcon, BriefcaseIcon } from "lucide-react";
 import clsx from "clsx";
 
-type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship";
+type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship" | "applied";
 type SortType = "match" | "company";
 
 const FILTERS: { id: FilterType; label: string }[] = [
@@ -19,6 +19,7 @@ const FILTERS: { id: FilterType; label: string }[] = [
   { id: "remote", label: "Remote" },
   { id: "entry-level", label: "Entry-level" },
   { id: "internship", label: "Internship" },
+  { id: "applied", label: "Applied" },
 ];
 
 function normalizeJob(raw: Record<string, unknown>): MockJob {
@@ -55,13 +56,13 @@ export default function InternshipsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("match");
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+  const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const load = async () => {
       try {
         const listRes = await internshipsApi.list(0, 50);
         let items = (listRes.data as Record<string, unknown>[]).map(normalizeJob);
-
         try {
           const matchRes = await internshipsApi.getMatches();
           const matches = (matchRes.data.matches as Record<string, unknown>[]).map(
@@ -82,6 +83,16 @@ export default function InternshipsPage() {
           setUsingMock(true);
         } else {
           setJobs(items);
+        }
+
+        try {
+          const appsRes = await applicationsApi.list();
+          const ids = new Set(
+            (appsRes.data as Record<string, unknown>[]).map((a) => Number(a.job_id))
+          );
+          setAppliedIds(ids);
+        } catch {
+          // applications optional
         }
       } catch {
         setLoadError(true);
@@ -116,6 +127,8 @@ export default function InternshipsPage() {
           j.job_type?.toLowerCase() === "internship" ||
           j.title.toLowerCase().includes("intern")
       );
+    } else if (filter === "applied") {
+      result = result.filter((j) => appliedIds.has(j.id));
     }
 
     if (sortBy === "match") {
@@ -134,6 +147,19 @@ export default function InternshipsPage() {
       else next.add(id);
       return next;
     });
+  };
+
+  const handleApply = async (id: number) => {
+    const job = jobs.find((j) => j.id === id);
+    try {
+      await applicationsApi.apply(id);
+      setAppliedIds((prev) => new Set(prev).add(id));
+      if (job?.application_url && job.application_url !== "#") {
+        window.open(job.application_url, "_blank", "noopener,noreferrer");
+      }
+    } catch {
+      // ignore apply errors in UI
+    }
   };
 
   return (
@@ -256,6 +282,8 @@ export default function InternshipsPage() {
                     job={job}
                     saved={savedIds.has(job.id)}
                     onSave={toggleSave}
+                    applied={appliedIds.has(job.id)}
+                    onApply={handleApply}
                   />
                 </div>
               ))}

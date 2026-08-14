@@ -17,7 +17,7 @@ const FOOTER_SECTIONS = [
     links: [
       { label: "CV Analysis", href: "/cv" },
       { label: "Career Roadmap", href: "/roadmap" },
-      { label: "Internships", href: "/internships" },
+      { label: "Jobs", href: "/internships" },
       { label: "Courses", href: "/courses" },
       { label: "Career Coach", href: "/chat" },
     ],

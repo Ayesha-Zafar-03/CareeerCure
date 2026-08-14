@@ -10,7 +10,7 @@ from app.core.config import settings, INSECURE_SECRET_KEYS
 from app.core.database import engine
 from app.core.database import create_tables, init_db_pool
 from app.core.rate_limit import limiter
-from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan
+from app.api import auth, cv, roadmap, internships, courses, chatbot, profile, admin, plan, applications
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,6 +65,7 @@ app.include_router(chatbot.router)
 app.include_router(profile.router)
 app.include_router(admin.router)
 app.include_router(plan.router)
+app.include_router(applications.router)
 
 
 @app.exception_handler(Exception)

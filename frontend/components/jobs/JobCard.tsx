@@ -8,6 +8,7 @@ import {
   ExternalLinkIcon,
   HeartIcon,
   SparklesIcon,
+  CheckIcon,
 } from "lucide-react";
 import clsx from "clsx";
 import type { MockJob } from "@/lib/mockData";
@@ -16,6 +17,8 @@ interface JobCardProps {
   job: MockJob;
   onSave?: (id: number) => void;
   saved?: boolean;
+  applied?: boolean;
+  onApply?: (id: number) => void;
 }
 
 function matchStyle(pct: number): string {
@@ -39,7 +42,7 @@ function CompanyMark({ company }: { company: string }) {
   );
 }
 
-export default function JobCard({ job, onSave, saved = false }: JobCardProps) {
+export default function JobCard({ job, onSave, saved = false, applied = false, onApply }: JobCardProps) {
   const matchPct =
     job.match_score !== undefined ? Math.round(job.match_score * 100) : null;
 
@@ -168,6 +171,27 @@ export default function JobCard({ job, onSave, saved = false }: JobCardProps) {
       <div className="flex-1" />
 
       <div className="flex flex-wrap gap-2 pt-4 mt-1 border-t border-line/50">
+        {onApply && (
+          <button
+            type="button"
+            onClick={() => onApply(job.id)}
+            disabled={applied}
+            className={clsx(
+              "flex items-center justify-center gap-1.5 py-2.5 px-3 font-mono text-[11px] tracking-[0.08em] uppercase transition-all duration-200 active:scale-[0.98] border",
+              applied
+                ? "border-accent/40 bg-accent/10 text-accent cursor-default"
+                : "border-primary text-primary hover:bg-primary hover:text-white"
+            )}
+          >
+            {applied ? (
+              <>
+                <CheckIcon className="w-3.5 h-3.5" /> Applied
+              </>
+            ) : (
+              "Apply"
+            )}
+          </button>
+        )}
         {job.application_url && (
           <a
             href={job.application_url}

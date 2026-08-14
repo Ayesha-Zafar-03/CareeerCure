@@ -128,6 +128,51 @@ def send_password_reset_email(to_email: str, full_name: str, otp: str) -> bool:
     return send_email(to_email, subject, html)
 
 
+def send_application_confirmation_email(
+    to_email: str, full_name: str, job_title: str, company: str
+) -> bool:
+    subject = "Application submitted on CareerCure"
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; background: #f9fafb; padding: 40px 0;">
+      <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px;
+                  padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="background: #2563eb; display: inline-block; padding: 12px 16px;
+                      border-radius: 10px; margin-bottom: 16px;">
+            <span style="color: white; font-size: 20px; font-weight: bold;">💼 CareerCure</span>
+          </div>
+          <h1 style="color: #111827; font-size: 22px; margin: 0;">Application submitted</h1>
+        </div>
+
+        <p style="color: #6b7280; font-size: 15px;">Hi <strong>{full_name}</strong>,</p>
+        <p style="color: #6b7280; font-size: 15px;">
+          Your application for <strong>{job_title}</strong> at <strong>{company}</strong> has been
+          submitted through CareerCure. We've attached your profile and CV to the application.
+        </p>
+
+        <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px;
+                    padding: 24px; text-align: center; margin: 28px 0;">
+          <p style="color: #166534; font-size: 14px; margin: 0 0 6px;">Status</p>
+          <p style="color: #15803d; font-size: 20px; font-weight: bold; margin: 0;">✓ Applied</p>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+          Complete any remaining steps on the employer's site to finish your application.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0;">
+        <p style="color: #d1d5db; font-size: 12px; text-align: center; margin: 0;">
+          CareerCure — AI-Powered Career Development Platform
+        </p>
+      </div>
+    </body>
+    </html>
+    """
+    return send_email(to_email, subject, html)
+
+
 def send_login_otp_email(to_email: str, full_name: str, otp: str) -> bool:
     subject = "Your CareerCure admin login code"
     html = f"""

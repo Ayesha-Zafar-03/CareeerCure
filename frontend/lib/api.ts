@@ -230,6 +230,14 @@ export const adminUsersApi = {
   delete: (id: number) => api.delete(`/api/admin/users/${id}`),
 };
 
+// ── Applications (auto-apply) ──────────────────────────────────────────────────
+export const applicationsApi = {
+  apply: (jobId: number) => api.post("/api/applications/apply", { job_id: jobId }),
+  list: () => api.get("/api/applications"),
+  get: (id: number) => api.get(`/api/applications/${id}`),
+  withdraw: (id: number) => api.post(`/api/applications/${id}/withdraw`),
+};
+
 // ── Admin Jobs ────────────────────────────────────────────────────────────────
 export const adminJobsApi = {
   list: (page = 1, limit = 20, search?: string) => {

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { profileApi, planApi } from "@/lib/api";
+import { profileApi, planApi, applicationsApi } from "@/lib/api";
 import {
   FileTextIcon, MapIcon, BriefcaseIcon, MessageCircleIcon,
   ArrowRightIcon, BookOpenIcon, CompassIcon, PieChart,
@@ -15,7 +15,7 @@ import clsx from "clsx";
 const QUICK_ACTIONS = [
   { icon: FileTextIcon, title: "CV Analysis", desc: "Upload and analyze your CV", href: "/cv" },
   { icon: MapIcon, title: "Career Roadmap", desc: "Plan your career path", href: "/roadmap" },
-  { icon: BriefcaseIcon, title: "Internships", desc: "Browse opportunities", href: "/internships" },
+  { icon: BriefcaseIcon, title: "Jobs", desc: "Browse opportunities", href: "/internships" },
   { icon: BookOpenIcon, title: "Courses", desc: "Learn new skills", href: "/courses" },
   { icon: MessageCircleIcon, title: "Career Coach", desc: "Get AI career advice", href: "/chat" },
 ];
@@ -24,15 +24,18 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [plannedCourses, setPlannedCourses] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [donutOffset, setDonutOffset] = useState(283);
 
   useEffect(() => {
     Promise.all([
       profileApi.getMe(),
       planApi.list(),
-    ]).then(([profileRes, planRes]) => {
+      applicationsApi.list().catch(() => ({ data: [] })),
+    ]).then(([profileRes, planRes, appsRes]) => {
       setProfile(profileRes.data);
       setPlannedCourses(planRes.data.courses || []);
+      setApplications((appsRes as any).data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -73,7 +76,7 @@ export default function DashboardPage() {
       cta: "Create roadmap",
     },
     {
-      title: "Browse internships",
+      title: "Browse jobs",
       desc: "Find opportunities that match your skills",
       href: "/internships",
       cta: "Explore",
@@ -301,6 +304,59 @@ export default function DashboardPage() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* My Applications */}
+              <div className="mb-10 bg-surface border border-line px-5 sm:px-6 py-6 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <BriefcaseIcon className="w-4 h-4 text-primary" />
+                    <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-ink/40">
+                      My Applications
+                    </p>
+                  </div>
+                  {applications.length > 0 && (
+                    <Link
+                      href="/applied"
+                      className="font-mono text-[11px] tracking-[0.08em] text-primary hover:underline underline-offset-2"
+                    >
+                      View all
+                    </Link>
+                  )}
+                </div>
+                {applications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="font-serif text-lg text-primary-dark mb-1">No applications yet</p>
+                    <p className="text-[13px] text-ink/60 mb-4">
+                      Apply to a job and it will be tracked here automatically.
+                    </p>
+                    <Link
+                      href="/internships"
+                      className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] uppercase text-primary border border-primary px-4 py-2 transition-all duration-200 hover:bg-primary/5"
+                    >
+                      Browse jobs
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {applications.slice(0, 3).map((app: any) => (
+                      <div
+                        key={app.id}
+                        className="flex items-center justify-between bg-paper border border-line/50 px-4 py-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium text-primary-dark truncate">{app.job_title}</p>
+                          <p className="font-mono text-[11px] uppercase tracking-wide text-ink/50">
+                            {app.company}
+                          </p>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.1em] text-accent bg-accent/10 px-2 py-0.5 shrink-0">
+                          Applied
+                        </span>
                       </div>
                     ))}
                   </div>

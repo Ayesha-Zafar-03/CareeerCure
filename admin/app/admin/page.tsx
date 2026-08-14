@@ -93,7 +93,7 @@ export default function AdminDashboard() {
           {[
             { label: "Users", value: stats.total_users, sub: `${stats.active_users} active`, icon: UsersIcon },
             { label: "Courses", value: stats.total_courses, sub: null, icon: BookOpenIcon },
-            { label: "Internships", value: stats.total_jobs, sub: null, icon: BriefcaseIcon },
+            { label: "Jobs", value: stats.total_jobs, sub: null, icon: BriefcaseIcon },
             { label: "New (7d)", value: stats.recent_registrations, sub: "registrations", icon: TrendingUpIcon },
           ].map((s) => {
             const Icon = s.icon;
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { href: "/admin/courses", label: "Courses", desc: "Add, edit, remove", icon: BookOpenIcon },
-            { href: "/admin/internships", label: "Internships", desc: "Job listings", icon: BriefcaseIcon },
+            { href: "/admin/internships", label: "Jobs", desc: "Job listings", icon: BriefcaseIcon },
             { href: "/admin/users", label: "Users", desc: "Accounts & roles", icon: UsersIcon },
             { href: "/admin/database", label: "Database", desc: "Sync & health", icon: DatabaseIcon },
           ].map((item) => {
