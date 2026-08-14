@@ -36,7 +36,7 @@ const FOOTER_SECTIONS = [
     links: [
       { label: "About Us", href: "/#about" },
       { label: "Our Team", href: "/#team" },
-      { label: "Contact", href: "/#contact" },
+      { label: "Contact", href: "/contact" },
       { label: "Careers", href: "/#careers" },
     ],
   },

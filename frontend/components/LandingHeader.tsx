@@ -7,7 +7,7 @@ const LINKS = [
   { label: "Features", href: "/#features" },
   { label: "How it Works", href: "/#how-it-works" },
   { label: "Testimonials", href: "/#testimonials" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function LandingHeader() {

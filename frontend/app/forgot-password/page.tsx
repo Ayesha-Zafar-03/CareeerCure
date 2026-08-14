@@ -2,8 +2,9 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BriefcaseIcon, ArrowLeftIcon, MailIcon, CheckCircleIcon } from "lucide-react";
+import { ArrowLeftIcon, MailIcon, CheckCircleIcon } from "lucide-react";
 import { authApi } from "@/lib/api";
+import AuthBrandPanel from "@/components/AuthBrandPanel";
 
 type Step = "email" | "otp";
 
@@ -64,7 +65,6 @@ export default function ForgotPasswordPage() {
       setError("Please enter the complete 6-digit code.");
       return;
     }
-    // Pass email + otp to reset page via query params
     router.push(`/reset-password?email=${encodeURIComponent(email)}&otp=${code}`);
   };
 
@@ -85,109 +85,143 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="bg-primary p-2 rounded-xl">
-              <BriefcaseIcon className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-xl text-primary-dark">CareerCure</span>
-          </Link>
-          {step === "email" ? (
-            <>
-              <h1 className="mt-6 text-2xl font-bold text-primary-dark">Forgot your password?</h1>
-              <p className="mt-1 text-sm text-ink/50">Enter your email and we&apos;ll send a reset code</p>
-            </>
-          ) : (
-            <>
-              <h1 className="mt-6 text-2xl font-bold text-primary-dark">Check your email</h1>
-              <p className="mt-1 text-sm text-ink/50">
-                We sent a 6-digit reset code to <strong>{email}</strong>
-              </p>
-            </>
-          )}
-        </div>
+    <div className="min-h-screen flex">
+      <AuthBrandPanel
+        title={<>Recover your<br />account</>}
+        subtitle="No worries — we'll help you reset your password and get back to building your career."
+      />
 
-        <div className="card">
-          {/* ── Step 1: Email input ── */}
-          {step === "email" && (
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
-              )}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper min-h-screen">
+        <div className="w-full max-w-sm">
+          <Link href="/" className="lg:hidden block mb-10">
+            <img src="/logo.png" alt="CareerCure" className="h-8 w-auto bg-transparent" />
+          </Link>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-primary-dark mb-1">
+              {step === "email" ? "Forgot your password?" : "Check your email"}
+            </h2>
+            <p className="text-sm text-ink/50">
+              {step === "email"
+                ? "Enter your email and we'll send a reset code."
+                : `We sent a 6-digit reset code to ${email}`}
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4">
+              {error}
+            </div>
+          )}
+
+          {step === "email" ? (
+            <form onSubmit={handleSendOtp} className="space-y-5">
               <div>
-                <label className="label" htmlFor="email">Email address</label>
-                <input id="email" type="email" className="input" placeholder="you@gmail.com"
-                  value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                <label className="block text-sm font-medium text-ink mb-2" htmlFor="email">
+                  Email address
+                </label>
+                <div className="relative">
+                  <MailIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40" />
+                  <input
+                    id="email"
+                    type="email"
+                    className="w-full pl-10 pr-4 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
               </div>
-              <button type="submit" className="btn-primary w-full" disabled={loading}>
+              <button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary-d text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:shadow-md disabled:opacity-50"
+                disabled={loading}
+              >
                 {loading ? "Sending reset code..." : "Send Reset Code"}
               </button>
             </form>
-          )}
-
-          {/* ── Step 2: OTP input ── */}
-          {step === "otp" && (
+          ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-5">
-              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 px-4 py-3 rounded-lg">
+              <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 px-4 py-3 rounded-xl">
                 <MailIcon className="w-5 h-5 text-primary flex-shrink-0" />
                 <p className="text-sm text-primary-dark">
                   Check your Gmail inbox for the reset code. It expires in 10 minutes.
                 </p>
               </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
-              )}
-
               {resent && (
-                <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 text-primary-dark text-sm px-4 py-3 rounded-lg">
+                <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 text-primary-dark text-sm px-4 py-3 rounded-xl">
                   <CheckCircleIcon className="w-4 h-4 text-primary" />
                   New code sent to your email!
                 </div>
               )}
 
               <div>
-                <label className="label text-center block mb-3">Enter 6-digit reset code</label>
+                <label className="block text-sm font-medium text-ink text-center mb-4">
+                  Enter 6-digit reset code
+                </label>
                 <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                   {otp.map((digit, i) => (
-                    <input key={i}
-                      ref={(el) => { inputRefs.current[i] = el; }}
-                      type="text" inputMode="numeric" maxLength={1} value={digit}
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        inputRefs.current[i] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="w-10 h-12 sm:w-12 text-center text-xl font-bold border-2 border-line rounded-lg
-                                 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                      className="w-10 h-12 sm:w-12 text-center text-xl font-bold border-2 border-line rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
                       aria-label={`Digit ${i + 1}`}
                     />
                   ))}
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full">
-                Continue to Reset Password →
+              <button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary-d text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:shadow-md"
+              >
+                Continue to Reset Password
               </button>
 
               <div className="text-center text-sm text-ink/50">
-                Didn&apos;t receive the code?{" "}
-                <button type="button" onClick={handleResend} disabled={resending}
-                  className="text-primary hover:underline font-medium disabled:opacity-50">
+                Didn't receive the code?{" "}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-primary hover:underline font-medium disabled:opacity-50"
+                >
                   {resending ? "Sending..." : "Resend code"}
                 </button>
               </div>
 
               <div className="text-center">
-                <button type="button" onClick={() => { setStep("email"); setError(""); setOtp(["","","","","",""]); }}
-                  className="text-xs text-ink/40 hover:text-ink/60">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("email");
+                    setError("");
+                    setOtp(["", "", "", "", "", ""]);
+                  }}
+                  className="text-xs text-ink/40 hover:text-ink/60"
+                >
                   ← Change email address
                 </button>
               </div>
             </form>
           )}
 
-          <div className="mt-4 text-center">
-            <Link href="/login" className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-ink/70">
+          <div className="mt-6 text-center">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1 text-sm text-ink/50 hover:text-ink/70"
+            >
               <ArrowLeftIcon className="w-3 h-3" />
               Back to login
             </Link>

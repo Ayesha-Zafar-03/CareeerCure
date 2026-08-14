@@ -1,44 +1,102 @@
-import LandingHeader from "@/components/LandingHeader";
-import Footer from "@/components/Footer";
-
-const SECTIONS = [
-  {
-    title: "Information we collect",
-    body: "We collect the information you provide when you register (such as your name and email), your uploaded CV, and usage data needed to deliver our AI features. We never sell your personal data.",
-  },
-  {
-    title: "How we use your data",
-    body: "Your data is used to provide CV analysis, generate roadmaps, match internships and courses, and improve our platform. Uploaded CVs are processed securely and only used to power the features you choose.",
-  },
-  {
-    title: "Data retention",
-    body: "We retain your account data for as long as your account is active. You can request deletion of your data at any time by contacting our team.",
-  },
-  {
-    title: "Your rights",
-    body: "You may access, correct, or delete your personal information at any time. For requests, email the team using the contact details on our website.",
-  },
-];
+import DocPage from "@/components/DocPage";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-paper">
-      <LandingHeader />
-      <main className="max-w-3xl mx-auto px-6 py-20">
-        <h1 className="text-3xl font-bold text-primary-dark mb-3">Privacy Policy</h1>
-        <p className="text-ink/60 mb-10">
-          Your privacy matters to us. This policy explains what we collect and how we use it.
-        </p>
-        <div className="space-y-6">
-          {SECTIONS.map((s) => (
-            <section key={s.title}>
-              <h2 className="text-lg font-semibold text-primary-dark mb-2">{s.title}</h2>
-              <p className="text-sm text-ink/70 leading-relaxed">{s.body}</p>
-            </section>
-          ))}
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <DocPage
+      breadcrumb="Privacy Policy"
+      title="Privacy Policy"
+      description="This policy explains what information CareerCure collects, how we use it, and the choices you have over your data."
+      updated="August 2026"
+      sections={[
+        {
+          id: "overview",
+          title: "Overview",
+          content: (
+            <p>
+              CareerCure ("we", "us") is committed to protecting your privacy. This
+              policy applies to the CareerCure web application and describes our
+              practices for handling personal information of students and graduates
+              who use the platform.
+            </p>
+          ),
+        },
+        {
+          id: "collection",
+          title: "Information we collect",
+          content: (
+            <p>
+              We collect information you provide directly, such as your name, email
+              address, and the CV you upload. We also collect limited usage data
+              (such as feature interactions) needed to operate and improve the
+              service. We do not collect special-category sensitive data unless you
+              choose to include it in your CV.
+            </p>
+          ),
+        },
+        {
+          id: "use",
+          title: "How we use your information",
+          content: (
+            <p>
+              Your information is used to create your account, power CV analysis,
+              generate roadmaps, match internships and courses, and respond to
+              support requests. Aggregated, de-identified data may be used to
+              improve our models and product experience.
+            </p>
+          ),
+        },
+        {
+          id: "sharing",
+          title: "Sharing and disclosure",
+          content: (
+            <p>
+              We do not sell your personal data. We may share data with trusted
+              service providers (for example, email delivery and hosting) strictly
+              to operate the platform, and where required by law.
+            </p>
+          ),
+        },
+        {
+          id: "retention",
+          title: "Data retention",
+          content: (
+            <p>
+              We retain your account and CV data for as long as your account is
+              active. You may delete your account at any time, after which we
+              remove your personal data within a reasonable period.
+            </p>
+          ),
+        },
+        {
+          id: "rights",
+          title: "Your rights",
+          content: (
+            <p>
+              You may access, correct, or delete your personal information, and you
+              can object to certain processing. To exercise these rights, contact
+              our team via the{" "}
+              <a href="/contact" className="text-primary hover:underline">
+                contact page
+              </a>
+              .
+            </p>
+          ),
+        },
+        {
+          id: "contact",
+          title: "Contact",
+          content: (
+            <p>
+              Questions about this policy can be sent to the team using the email
+              addresses listed on our{" "}
+              <a href="/contact" className="text-primary hover:underline">
+                contact page
+              </a>
+              .
+            </p>
+          ),
+        },
+      ]}
+    />
   );
 }

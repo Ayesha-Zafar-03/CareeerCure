@@ -399,23 +399,15 @@ export default function LandingPage() {
           </div>
 
           <div id="careers" className="mt-12 pt-10 border-t border-line/50">
-            <p className="text-sm font-medium text-primary-dark mb-4">Get in touch with the team</p>
-            <ul className="flex flex-col sm:flex-row items-center justify-center gap-x-8 gap-y-3">
-              {[
-                "F2022065209@umt.edu.pk",
-                "Emanabdulkhaliq52@gmail.com",
-                "ayeshaaazafar2004@gmail.com",
-              ].map((email) => (
-                <li key={email}>
-                  <a
-                    href={`mailto:${email}`}
-                    className="text-sm text-ink/60 hover:text-accent transition-colors"
-                  >
-                    {email}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <p className="text-sm font-medium text-primary-dark mb-2">Careers</p>
+            <p className="text-sm text-ink/60">
+              We're a student-built team passionate about career development. Reach
+              out via our{" "}
+              <a href="/contact" className="text-primary hover:underline">
+                contact page
+              </a>{" "}
+              to collaborate or learn more.
+            </p>
           </div>
         </div>
       </section>
