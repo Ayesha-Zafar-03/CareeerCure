@@ -4,6 +4,7 @@ import { MenuIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 
 const LINKS = [
+  { label: "Home", href: "/" },
   { label: "Features", href: "/#features" },
   { label: "How it Works", href: "/#how-it-works" },
   { label: "Testimonials", href: "/#testimonials" },

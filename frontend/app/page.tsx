@@ -390,12 +390,12 @@ export default function LandingPage() {
               Get Started Free
               <ArrowRightIcon className="w-5 h-5" />
             </Link>
-            <a
-              href="mailto:hello@careercure.app"
+            <Link
+              href="/contact"
               className="flex items-center gap-2 border-2 border-line hover:bg-primary/5 text-ink font-semibold px-8 py-3.5 rounded-xl transition-colors duration-200 text-lg"
             >
               Contact Us
-            </a>
+            </Link>
           </div>
 
           <div id="careers" className="mt-12 pt-10 border-t border-line/50">
