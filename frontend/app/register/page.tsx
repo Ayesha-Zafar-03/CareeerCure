@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { authApi } from "@/lib/api";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 import AuthBrandPanel from "@/components/AuthBrandPanel";
-import { BriefcaseIcon, EyeIcon, EyeOffIcon, MailIcon, CheckCircleIcon, LockIcon } from "lucide-react";
+import { BriefcaseIcon, EyeIcon, EyeOffIcon, MailIcon, CheckCircleIcon, LockIcon, ArrowLeftIcon } from "lucide-react";
 
 type Step = "form" | "verify";
 type AgeRange = "16-18" | "19-24" | "25+";
@@ -139,17 +139,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex lg:h-screen lg:overflow-hidden">
       <AuthBrandPanel
         title={<>Start your<br />career journey</>}
         subtitle="Create an account to unlock personalized roadmaps, curated internships, and courses tailored to your goals."
       />
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper min-h-screen">
+      <div className="flex-1 flex items-center justify-center px-6 py-10 bg-paper lg:h-screen lg:overflow-y-auto no-scrollbar">
         <div className="w-full max-w-sm">
         {step === "form" && (
           <div className="animate-fade-in-up">
+            <Link
+              href="/"
+              className="hidden lg:inline-flex items-center gap-1.5 mb-8 text-sm text-ink/50 hover:text-primary transition-colors"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to home
+            </Link>
             {/* Mobile logo */}
             <Link href="/" className="lg:hidden block mb-10">
               <img src="/logo.png" alt="CareerCure" className="h-8 w-auto bg-transparent" />

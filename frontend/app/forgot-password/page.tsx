@@ -85,16 +85,23 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex lg:h-screen lg:overflow-hidden">
       <AuthBrandPanel
         title={<>Recover your<br />account</>}
         subtitle="No worries — we'll help you reset your password and get back to building your career."
       />
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-paper min-h-screen">
+      <div className="flex-1 flex items-center justify-center px-6 py-10 bg-paper lg:h-screen lg:overflow-y-auto no-scrollbar">
         <div className="w-full max-w-sm">
           <Link href="/" className="lg:hidden block mb-10">
             <img src="/logo.png" alt="CareerCure" className="h-8 w-auto bg-transparent" />
+          </Link>
+          <Link
+            href="/"
+            className="hidden lg:inline-flex items-center gap-1.5 mb-8 text-sm text-ink/50 hover:text-primary transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to home
           </Link>
 
           <div className="mb-8">
