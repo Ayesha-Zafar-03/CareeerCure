@@ -180,12 +180,17 @@ export default function LandingPage() {
               <div 
                 key={f.title} 
                 className="group bg-surface/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-white/40 hover:shadow-xl hover:scale-105 transition-all duration-300 animate-fade-in-up hover:bg-surface"
-                style={{animationDelay: `${index * 0.1}s`}}
+                style={{animationDelay: `${index * 0.15}s`}}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${f.color} group-hover:scale-110 transition-transform duration-300`}>
                   <f.icon className="w-6 h-6 group-hover:animate-bounce" />
                 </div>
-                <h3 className="font-semibold text-primary-dark mb-2 group-hover:text-primary transition-colors">{f.title}</h3>
+                <TypewriterText
+                  text={f.title}
+                  speed={30}
+                  startDelay={index * 200}
+                  className="font-semibold text-primary-dark mb-2"
+                />
                 <p className="text-sm text-ink/50 leading-relaxed">{f.description}</p>
                 
                 {/* Animated accent */}
