@@ -5,13 +5,12 @@ import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChatWidget from "@/components/ChatWidget";
 import JobCard from "@/components/jobs/JobCard";
-import { internshipsApi, applicationsApi } from "@/lib/api";
+import { internshipsApi } from "@/lib/api";
 import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
 import { CompassIcon, BriefcaseIcon, SearchIcon } from "lucide-react";
 import clsx from "clsx";
-import TypewriterText, { TypewriterSequence } from "@/components/TypewriterText";
 
-type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship" | "applied";
+type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship";
 type SortType = "match" | "company";
 
 const FILTERS: { id: FilterType; label: string }[] = [
@@ -20,7 +19,6 @@ const FILTERS: { id: FilterType; label: string }[] = [
   { id: "remote", label: "Remote" },
   { id: "entry-level", label: "Entry-level" },
   { id: "internship", label: "Internship" },
-  { id: "applied", label: "Applied" },
 ];
 
 function normalizeJob(raw: Record<string, unknown>): MockJob {
@@ -75,7 +73,6 @@ export default function InternshipsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
-  const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const load = async () => {
@@ -102,16 +99,6 @@ export default function InternshipsPage() {
           setUsingMock(true);
         } else {
           setJobs(items);
-        }
-
-        try {
-          const appsRes = await applicationsApi.list();
-          const ids = new Set(
-            (appsRes.data as Record<string, unknown>[]).map((a) => Number(a.job_id))
-          );
-          setAppliedIds(ids);
-        } catch {
-          // applications optional
         }
       } catch {
         setLoadError(true);
@@ -157,8 +144,6 @@ export default function InternshipsPage() {
           j.job_type?.toLowerCase() === "internship" ||
           j.title.toLowerCase().includes("intern")
       );
-    } else if (filter === "applied") {
-      result = result.filter((j) => appliedIds.has(j.id));
     }
 
     if (sortBy === "match") {
@@ -177,19 +162,6 @@ export default function InternshipsPage() {
       else next.add(id);
       return next;
     });
-  };
-
-  const handleApply = async (id: number) => {
-    const job = jobs.find((j) => j.id === id);
-    try {
-      await applicationsApi.apply(id);
-      setAppliedIds((prev) => new Set(prev).add(id));
-      if (job?.application_url && job.application_url !== "#") {
-        window.open(job.application_url, "_blank", "noopener,noreferrer");
-      }
-    } catch {
-      // ignore apply errors in UI
-    }
   };
 
   return (
@@ -229,23 +201,6 @@ export default function InternshipsPage() {
                   Sample data — connect backend for live listings
                 </p>
               )}
-            
-            {/* Live feature highlights */}
-            <div className="max-w-3xl mx-auto mt-8 mb-6" style={{ minHeight: '80px' }}>
-              <TypewriterSequence
-                lines={[
-                  "💼  Job Matching — Semantically ranked internships from your CV",
-                  "🎯  Smart Filters — Pakistan, Remote, Entry-level, Internship",
-                  "🔍  Search — Find by title, company, or required skills",
-                  "📊  Match Score — See how well each role fits your profile",
-                  "⚡  One-Click Apply — Direct links to company career pages",
-                ]}
-                speed={18}
-                lineDelay={1000}
-                className="text-left text-base text-ink/60 font-light leading-relaxed"
-              />
-            </div>
-            
             </div>
           </div>
 
@@ -339,8 +294,6 @@ export default function InternshipsPage() {
                     job={job}
                     saved={savedIds.has(job.id)}
                     onSave={toggleSave}
-                    applied={appliedIds.has(job.id)}
-                    onApply={handleApply}
                   />
                 </div>
               ))}
