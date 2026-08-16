@@ -19,10 +19,9 @@ import {
   Bot,
   MenuIcon,
   XIcon,
-  CheckIcon,
 } from "lucide-react";
 import clsx from "clsx";
-import { chatApi, chatHistoryApi, applicationsApi } from "@/lib/api";
+import { chatApi, chatHistoryApi } from "@/lib/api";
 import CourseCard from "@/components/courses/CourseCard";
 import { formatMessage } from "@/lib/chatUtils";
 
@@ -59,7 +58,7 @@ const NAV_RAIL = [
   { href: "/internships", label: "Jobs", icon: BriefcaseIcon },
   { href: "/courses", label: "Courses", icon: BookOpenIcon },
   { href: "/roadmap", label: "Roadmap", icon: MapIcon },
-  { href: "/applied", label: "Applied", icon: CheckIcon },
+  { href: "/applied", label: "Applied", icon: FileTextIcon },
   { href: "/chat", label: "Coach", icon: SparklesIcon },
 ];
 
@@ -104,7 +103,6 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(new Set());
   const lastMsgRef = useRef<HTMLDivElement>(null);
   const prevMsgLen = useRef(1);
   const initialSent = useRef(false);
@@ -262,24 +260,6 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
   const handleActionClick = (action: string) => {
     if (action === "Show jobs") sendMessage("Show me job opportunities that match my profile");
     else if (action === "Find courses") sendMessage("Recommend courses for my career development");
-  };
-
-  const handleApplyJob = async (job: any) => {
-    if (appliedJobIds.has(job.id)) {
-      if (job.application_url && job.application_url !== "#") {
-        window.open(job.application_url, "_blank", "noopener,noreferrer");
-      }
-      return;
-    }
-    try {
-      await applicationsApi.apply(job.id);
-      setAppliedJobIds((prev) => new Set(prev).add(job.id));
-      if (job.application_url && job.application_url !== "#") {
-        window.open(job.application_url, "_blank", "noopener,noreferrer");
-      }
-    } catch (err) {
-      console.error("Apply failed:", err);
-    }
   };
 
   // Group conversations by date
@@ -474,22 +454,8 @@ export default function CareerCoachChat({ compact = false, initialQuery }: Caree
                                 </div>
                                 {job.location && <p className="text-sm text-ink/50">{job.location}{job.remote_option ? ` · ${job.remote_option}` : ""}</p>}
                                 <div className="flex items-center gap-3 mt-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleApplyJob(job)}
-                                    disabled={appliedJobIds.has(job.id)}
-                                    className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.05em] uppercase px-3 py-1.5 rounded-md transition-colors disabled:cursor-default disabled:opacity-80 bg-primary text-white hover:bg-primary-d"
-                                  >
-                                    {appliedJobIds.has(job.id) ? (
-                                      <>
-                                        <CheckIcon className="w-3 h-3" /> Applied
-                                      </>
-                                    ) : (
-                                      "Apply to job"
-                                    )}
-                                  </button>
                                   {job.application_url && job.application_url !== "#" && (
-                                    <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-[10px] tracking-[0.05em] uppercase text-primary hover:text-primary-d transition-colors">
+                                    <a href={job.application_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.05em] uppercase px-3 py-1.5 rounded-md bg-primary text-white hover:bg-primary-d transition-colors">
                                       View on site <ExternalLink className="w-3 h-3" />
                                     </a>
                                   )}
