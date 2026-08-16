@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChatWidget from "@/components/ChatWidget";
@@ -51,6 +51,22 @@ function matchesDuration(course: MockCourse, durationFilter: string): boolean {
   return true;
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function CoursesPage() {
   const [courses, setCourses] = useState<MockCourse[]>([]);
   const [roadmapCourses, setRoadmapCourses] = useState<MockCourse[]>([]);
@@ -58,6 +74,7 @@ export default function CoursesPage() {
   const [usingMock, setUsingMock] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [levelFilter, setLevelFilter] = useState("All");
   const [durationFilter, setDurationFilter] = useState("All");
   const [freeOnly, setFreeOnly] = useState(false);
@@ -112,7 +129,7 @@ export default function CoursesPage() {
 
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
-      const q = search.toLowerCase();
+      const q = debouncedSearch.toLowerCase();
       const matchesSearch =
         !q ||
         c.title.toLowerCase().includes(q) ||

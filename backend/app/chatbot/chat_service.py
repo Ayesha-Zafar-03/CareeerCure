@@ -136,7 +136,7 @@ def get_recommended_jobs(user_profile=None, limit: int = 6, db: Session = None) 
                 "skills_required": ["Python", "FastAPI", "SQL", "Git"],
                 "match_score": 0.92,
                 "remote_option": "Full Remote",
-                "application_url": "https://techstart.com/apply"
+                "application_url": "https://example.com/apply"
             },
             {
                 "id": 2,
@@ -147,7 +147,7 @@ def get_recommended_jobs(user_profile=None, limit: int = 6, db: Session = None) 
                 "skills_required": ["React", "JavaScript", "HTML/CSS", "TypeScript"],
                 "match_score": 0.85,
                 "remote_option": "Hybrid",
-                "application_url": "https://webflow.com/careers"
+                "application_url": "https://example.com/careers"
             },
             {
                 "id": 3,
@@ -158,7 +158,7 @@ def get_recommended_jobs(user_profile=None, limit: int = 6, db: Session = None) 
                 "skills_required": ["Python", "Pandas", "Machine Learning", "SQL"],
                 "match_score": 0.78,
                 "remote_option": "On-site",
-                "application_url": "https://datatech.com/internships"
+                "application_url": "https://example.com/internships"
             }
         ]
         return mock_jobs[:limit]
@@ -206,7 +206,7 @@ def get_recommended_courses(user_profile=None, limit: int = 4, db: Session = Non
                 "is_free": False,
                 "price": "$99",
                 "skills_gained": ["Python", "Programming", "Problem Solving"],
-                "course_url": "https://teched.com/python-bootcamp"
+                "course_url": "https://example.com/courses"
             },
             {
                 "id": 2,
@@ -219,7 +219,7 @@ def get_recommended_courses(user_profile=None, limit: int = 4, db: Session = Non
                 "is_free": True,
                 "price": "Free",
                 "skills_gained": ["React", "JavaScript", "Frontend"],
-                "course_url": "https://codecademy.com/react"
+                "course_url": "https://example.com/courses"
             },
             {
                 "id": 3,
@@ -232,7 +232,7 @@ def get_recommended_courses(user_profile=None, limit: int = 4, db: Session = Non
                 "is_free": False,
                 "price": "$149",
                 "skills_gained": ["Data Analysis", "Python", "Statistics"],
-                "course_url": "https://datalearn.com/fundamentals"
+                "course_url": "https://example.com/courses"
             }
         ]
         return mock_courses[:limit]

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ChatWidget from "@/components/ChatWidget";
 import JobCard from "@/components/jobs/JobCard";
 import { internshipsApi, applicationsApi } from "@/lib/api";
 import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
-import { CompassIcon, BriefcaseIcon } from "lucide-react";
+import { CompassIcon, BriefcaseIcon, SearchIcon } from "lucide-react";
 import clsx from "clsx";
 
 type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship" | "applied";
@@ -48,6 +48,22 @@ function normalizeJob(raw: Record<string, unknown>): MockJob {
   };
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function InternshipsPage() {
   const [jobs, setJobs] = useState<MockJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +71,8 @@ export default function InternshipsPage() {
   const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortType>("match");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set());
 
@@ -106,6 +124,17 @@ export default function InternshipsPage() {
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
 
+    const q = debouncedSearch.toLowerCase();
+    if (q) {
+      result = result.filter((j) =>
+        j.title.toLowerCase().includes(q) ||
+        j.company.toLowerCase().includes(q) ||
+        j.required_skills?.some((s) => s.toLowerCase().includes(q)) ||
+        j.skills_have?.some((s) => s.toLowerCase().includes(q)) ||
+        j.skills_missing?.some((s) => s.toLowerCase().includes(q))
+      );
+    }
+
     if (filter === "pakistan") {
       result = result.filter((j) =>
         j.location?.toLowerCase().includes("pakistan")
@@ -138,7 +167,7 @@ export default function InternshipsPage() {
     }
 
     return result;
-  }, [jobs, filter, sortBy]);
+  }, [jobs, filter, sortBy, debouncedSearch]);
 
   const toggleSave = (id: number) => {
     setSavedIds((prev) => {
@@ -203,6 +232,16 @@ export default function InternshipsPage() {
           </div>
 
           <div className="mb-10 bg-surface border border-line px-5 sm:px-6 py-5 transition-shadow hover:shadow-sm">
+            <div className="flex items-center gap-2 border-b border-primary/15 pb-3 mb-5 focus-within:border-primary transition-colors">
+              <SearchIcon className="w-4 h-4 text-primary/40 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search jobs, companies, or skills…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-transparent text-primary placeholder:text-primary/35 focus:outline-none py-1 font-light"
+              />
+            </div>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5">
               <div>
                 <label className="block font-mono text-[10px] tracking-[0.16em] uppercase text-primary/45 mb-2">

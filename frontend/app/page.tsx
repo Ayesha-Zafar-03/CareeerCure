@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useState, useEffect } from "react";
 import {
   BriefcaseIcon, 
   FileTextIcon, 
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import LandingHeader from "@/components/LandingHeader";
 import Footer from "@/components/Footer";
+import TypewriterText, { TypewriterSequence } from "@/components/TypewriterText";
 
 const VantaBackground = dynamic(() => import("@/components/VantaBackground"), { ssr: false });
 
@@ -82,11 +84,18 @@ export default function LandingPage() {
         
         <div className="relative">
           <h1 className="text-5xl md:text-6xl font-extrabold text-primary-dark leading-tight mb-6">
-            <span className="inline-block animate-fade-in-up">Your AI-Powered</span>
-            <br />
-            <span className="bg-gradient-to-r from-primary via-primary-d to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+            <TypewriterSequence
+              lines={[
+                "Your AI-Powered",
+                "Career Companion",
+              ]}
+              speed={40}
+              lineDelay={800}
+              className="flex flex-col items-center"
+            />
+            <div className="bg-gradient-to-r from-primary via-primary-d to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
               Career Companion
-            </span>
+            </div>
           </h1>
           
           {/* Animated decorative elements */}
@@ -101,9 +110,12 @@ export default function LandingPage() {
           </div>
         </div>
         
-        <p className="text-xl text-ink/50 max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{animationDelay: '0.5s'}}>
-          CareerCure analyses your CV, matches you with internships and courses, generates personalised career roadmaps, and answers your career questions — all powered by AI.
-        </p>
+        <TypewriterText
+          text="CareerCure analyses your CV, matches you with internships and courses, generates personalised career roadmaps, and answers your career questions — all powered by AI."
+          speed={30}
+          startDelay={2000}
+          className="text-xl text-ink/50 max-w-2xl mx-auto mb-10 block"
+        />
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '1s'}}>
           <Link

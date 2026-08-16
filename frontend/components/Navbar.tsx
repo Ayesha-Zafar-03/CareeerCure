@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LogOutIcon, UserIcon, MenuIcon, XIcon } from "lucide-react";
+import { LogOutIcon, UserIcon, MenuIcon, XIcon, HomeIcon } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
 
 const NAV_LINKS = [
+  { href: "/", label: "Home", icon: HomeIcon },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/cv", label: "CV Analysis" },
   { href: "/internships", label: "Jobs" },
@@ -41,10 +42,11 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={clsx(
-                    "nav-link px-3 py-2",
+                    "nav-link px-3 py-2 flex items-center gap-1.5",
                     pathname === link.href && "nav-link-active"
                   )}
                 >
+                  {link.icon && <link.icon className="w-4 h-4" />}
                   {link.label}
                 </Link>
               ))}
@@ -94,12 +96,13 @@ export default function Navbar() {
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 className={clsx(
-                  "block px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
                   pathname === link.href
                     ? "bg-primary/10 text-primary"
                     : "text-ink/60 hover:bg-primary/5"
                 )}
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
               </Link>
             ))}
