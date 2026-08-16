@@ -114,22 +114,6 @@ export default function LandingPage() {
           className="text-xl text-ink/50 max-w-2xl mx-auto mb-10 block"
         />
         
-        {/* Live feature highlights */}
-        <div className="max-w-3xl mx-auto mb-10" style={{ minHeight: '60px' }}>
-          <TypewriterSequence
-            lines={[
-              "✨  AI CV Analysis — Skills extracted, gaps identified, improvements suggested",
-              "🗺️  Career Roadmap — Step-by-step path tailored to your goals",
-              "💼  Job Matching — Semantically ranked internships from your CV",
-              "📚  Course Recommendations — Curated from Udemy, Coursera, edX",
-              "🤖  AI Career Counselor — Real-time guidance powered by Groq LLaMA3",
-            ]}
-            speed={18}
-            lineDelay={1200}
-            className="text-left text-base text-ink/60 font-light leading-relaxed"
-          />
-        </div>
-        
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '1s'}}>
           <Link
             href="/register"

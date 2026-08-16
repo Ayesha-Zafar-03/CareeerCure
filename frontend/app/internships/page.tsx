@@ -9,6 +9,7 @@ import { internshipsApi, applicationsApi } from "@/lib/api";
 import { MOCK_JOBS, type MockJob } from "@/lib/mockData";
 import { CompassIcon, BriefcaseIcon, SearchIcon } from "lucide-react";
 import clsx from "clsx";
+import TypewriterText, { TypewriterSequence } from "@/components/TypewriterText";
 
 type FilterType = "all" | "pakistan" | "remote" | "entry-level" | "internship" | "applied";
 type SortType = "match" | "company";
@@ -228,6 +229,23 @@ export default function InternshipsPage() {
                   Sample data — connect backend for live listings
                 </p>
               )}
+            
+            {/* Live feature highlights */}
+            <div className="max-w-3xl mx-auto mt-8 mb-6" style={{ minHeight: '80px' }}>
+              <TypewriterSequence
+                lines={[
+                  "💼  Job Matching — Semantically ranked internships from your CV",
+                  "🎯  Smart Filters — Pakistan, Remote, Entry-level, Internship",
+                  "🔍  Search — Find by title, company, or required skills",
+                  "📊  Match Score — See how well each role fits your profile",
+                  "⚡  One-Click Apply — Direct links to company career pages",
+                ]}
+                speed={18}
+                lineDelay={1000}
+                className="text-left text-base text-ink/60 font-light leading-relaxed"
+              />
+            </div>
+            
             </div>
           </div>
 
