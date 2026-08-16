@@ -93,9 +93,6 @@ export default function LandingPage() {
               lineDelay={800}
               className="flex flex-col items-center"
             />
-            <div className="bg-gradient-to-r from-primary via-primary-d to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-              Career Companion
-            </div>
           </h1>
           
           {/* Animated decorative elements */}
@@ -111,11 +108,27 @@ export default function LandingPage() {
         </div>
         
         <TypewriterText
-          text="CareerCure analyses your CV, matches you with internships and courses, generates personalised career roadmaps, and answers your career questions — all powered by AI."
-          speed={30}
-          startDelay={2000}
+          text="Upload your CV → Get matched with internships, courses & a personalised roadmap → Land your dream role."
+          speed={25}
+          startDelay={1800}
           className="text-xl text-ink/50 max-w-2xl mx-auto mb-10 block"
         />
+        
+        {/* Live feature highlights */}
+        <div className="max-w-3xl mx-auto mb-10" style={{ minHeight: '60px' }}>
+          <TypewriterSequence
+            lines={[
+              "✨  AI CV Analysis — Skills extracted, gaps identified, improvements suggested",
+              "🗺️  Career Roadmap — Step-by-step path tailored to your goals",
+              "💼  Job Matching — Semantically ranked internships from your CV",
+              "📚  Course Recommendations — Curated from Udemy, Coursera, edX",
+              "🤖  AI Career Counselor — Real-time guidance powered by Groq LLaMA3",
+            ]}
+            speed={18}
+            lineDelay={1200}
+            className="text-left text-base text-ink/60 font-light leading-relaxed"
+          />
+        </div>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '1s'}}>
           <Link
