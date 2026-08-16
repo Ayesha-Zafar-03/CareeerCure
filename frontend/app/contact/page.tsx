@@ -16,7 +16,7 @@ const CONTACTS = [
   {
     name: "Hira Jawaid",
     role: "Co-Founder",
-    email: "F2022065209@umt.edu.pk",
+    email: "hira.jawaidd@gmail.com",
   },
 ];
 
