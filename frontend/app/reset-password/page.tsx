@@ -39,7 +39,12 @@ function ResetPasswordForm() {
       setSuccess(true);
       setTimeout(() => router.push("/login"), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Reset failed. The code may be invalid or expired.");
+      const status = err.response?.status;
+      if (status === 0 || err.message?.includes("Network Error")) {
+        setError("Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.");
+      } else {
+        setError(err.response?.data?.detail || "Reset failed. The code may be invalid or expired.");
+      }
     } finally {
       setLoading(false);
     }

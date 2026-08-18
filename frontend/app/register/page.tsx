@@ -65,7 +65,16 @@ export default function RegisterPage() {
       });
       setStep("verify");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Registration failed. Please try again.");
+      const status = err.response?.status;
+      let msg = err.response?.data?.detail || "Registration failed. Please try again.";
+      
+      if (status === 0 || err.message?.includes("Network Error")) {
+        msg = "Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.";
+      } else if (status === 400 && msg.includes("already registered")) {
+        msg = "This email is already registered. Try logging in instead.";
+      }
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -115,7 +124,16 @@ export default function RegisterPage() {
       await login(email, password);
       router.push("/cv");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Invalid or expired code. Please try again.");
+      const status = err.response?.status;
+      let msg = err.response?.data?.detail || "Invalid or expired code. Please try again.";
+      
+      if (status === 0 || err.message?.includes("Network Error")) {
+        msg = "Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.";
+      } else if (status === 400 && msg.includes("Invalid or expired")) {
+        msg = "Invalid or expired code. Please request a new code.";
+      }
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -131,8 +149,13 @@ export default function RegisterPage() {
       setResent(true);
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
-    } catch {
-      setError("Failed to resend code. Please try again.");
+    } catch (err: any) {
+      const status = err.response?.status;
+      if (status === 0 || err.message?.includes("Network Error")) {
+        setError("Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.");
+      } else {
+        setError("Failed to resend code. Please try again.");
+      }
     } finally {
       setResending(false);
     }

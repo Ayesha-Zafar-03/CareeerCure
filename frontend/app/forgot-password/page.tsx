@@ -28,7 +28,12 @@ export default function ForgotPasswordPage() {
       await authApi.forgotPassword(email);
       setStep("otp");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Something went wrong. Please try again.");
+      const status = err.response?.status;
+      if (status === 0 || err.message?.includes("Network Error")) {
+        setError("Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.");
+      } else {
+        setError(err.response?.data?.detail || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -77,8 +82,13 @@ export default function ForgotPasswordPage() {
       setResent(true);
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
-    } catch {
-      setError("Failed to resend code. Please try again.");
+    } catch (err: any) {
+      const status = err.response?.status;
+      if (status === 0 || err.message?.includes("Network Error")) {
+        setError("Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.");
+      } else {
+        setError("Failed to resend code. Please try again.");
+      }
     } finally {
       setResending(false);
     }

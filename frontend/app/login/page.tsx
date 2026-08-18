@@ -34,9 +34,19 @@ function LoginPageInner() {
         router.push("/dashboard");
       }
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        "Login failed. Please check your credentials.";
+      const axiosError = err as { response?: { data?: { detail?: string }; status?: number }; message?: string };
+      const status = axiosError.response?.status;
+      let msg = axiosError.response?.data?.detail || "Login failed. Please check your credentials.";
+      
+      // Provide more helpful error messages
+      if (status === 401) {
+        msg = "Incorrect email or password. If you just registered, make sure you verified your email first.";
+      } else if (status === 403) {
+        msg = "Email not verified. Check your inbox for the verification code.";
+      } else if (status === 0 || axiosError.message?.includes("Network Error")) {
+        msg = "Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.";
+      }
+      
       setError(msg);
     } finally {
       setLoading(false);

@@ -1,9 +1,16 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL && typeof window !== "undefined") {
+  console.error(
+    "❌ NEXT_PUBLIC_API_URL is not set! " +
+    "Please set it in Vercel Environment Variables to your backend URL (e.g., https://your-api.vercel.app)"
+  );
+}
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL || "http://localhost:8000",
   headers: { "Content-Type": "application/json" },
   timeout: 30000, // 30 second timeout
 });

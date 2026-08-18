@@ -53,8 +53,11 @@ export default function SocialLoginButtons({
     setMessage("");
 
     if (backendUnreachable) {
+      const isProduction = typeof window !== "undefined" && !window.location.hostname.includes("localhost");
       setMessage(
-        "Cannot reach the API server. Start the backend on port 8000, then refresh this page."
+        isProduction
+          ? "Social login unavailable: Backend API not reachable. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel and the backend is deployed."
+          : "Cannot reach the API server. Start the backend on port 8000, then refresh this page."
       );
       return;
     }
@@ -102,7 +105,12 @@ export default function SocialLoginButtons({
       {socialUnavailable && !message && (
         <div className="bg-primary/5 border border-primary/20 text-primary text-sm px-4 py-3 rounded-xl">
           {backendUnreachable
-            ? "Social login requires the backend API. Start it on port 8000, then refresh."
+            ? (() => {
+                const isProduction = typeof window !== "undefined" && !window.location.hostname.includes("localhost");
+                return isProduction
+                  ? "Social login unavailable: Backend API not reachable. Set NEXT_PUBLIC_API_URL in Vercel and ensure backend is deployed."
+                  : "Social login requires the backend API. Start it on port 8000, then refresh.";
+              })()
             : `Social login is not configured yet. Use ${emailFallbackLabel} below.`}
         </div>
       )}
