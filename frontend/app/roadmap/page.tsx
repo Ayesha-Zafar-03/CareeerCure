@@ -68,7 +68,18 @@ export default function RoadmapPage() {
       setPastRoadmaps(updated);
       syncRoadmapTitles(updated);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Couldn't generate that roadmap - try again.");
+      const status = err.response?.status;
+      let msg = err.response?.data?.detail || "Couldn't generate that roadmap - try again.";
+      
+      if (status === 0 || err.message?.includes("Network Error")) {
+        msg = "Cannot reach backend API. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.";
+      } else if (status === 500) {
+        msg = "Backend error: " + (err.response?.data?.detail || "Check GROQ_API_KEY and database connection");
+      } else if (status === 401) {
+        msg = "Session expired. Please log in again.";
+      }
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }

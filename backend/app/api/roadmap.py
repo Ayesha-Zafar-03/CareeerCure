@@ -7,6 +7,9 @@ from app.models.user import User
 from app.models.profile import Profile
 from app.models.career import Roadmap
 from app.services.recommendation_service import generate_roadmap
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/roadmap", tags=["Career Roadmap"])
 
@@ -22,17 +25,23 @@ def create_roadmap(
     current_user: User = Depends(get_current_user),
 ):
     """Generate a personalised career roadmap using AI."""
-    profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
-    current_skills = profile.skills if profile and profile.skills else []
+    try:
+        profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+        current_skills = profile.skills if profile and profile.skills else []
 
-    roadmap = generate_roadmap(current_user.id, req.career_goal, current_skills, db)
+        roadmap = generate_roadmap(current_user.id, req.career_goal, current_skills, db)
 
-    # Update profile career goal
-    if profile:
-        profile.career_goal = req.career_goal
-        db.commit()
+        # Update profile career goal
+        if profile:
+            profile.career_goal = req.career_goal
+            db.commit()
 
-    return roadmap
+        return roadmap
+    except Exception as e:
+        logger.error(f"Roadmap generation failed for user {current_user.id}: {e}", exc_info=True)
+        if "GROQ_API_KEY" in str(e) or "api_key" in str(e).lower():
+            raise HTTPException(status_code=500, detail="AI service not configured. Please set GROQ_API_KEY in backend environment.")
+        raise HTTPException(status_code=500, detail=f"Roadmap generation failed: {str(e)}")
 
 
 @router.get("/list")
