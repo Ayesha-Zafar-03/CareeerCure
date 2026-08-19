@@ -16,7 +16,7 @@ Set these environment variables:
 | `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | **Production PostgreSQL URL** |
 | `SECRET_KEY` | `your-64-char-random-string` | Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
 | `GROQ_API_KEY` | `gsk_...` | Your Groq API key |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | |
 | `CHROMA_PERSIST_DIR` | `./chroma_data` | |
 | `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | |
 | `ALLOWED_ORIGINS` | `https://your-frontend-domain.com,https://your-admin-domain.com` | **Production frontend URLs** |
