@@ -87,3 +87,22 @@ def get_roadmap(
         "created_at": roadmap.created_at.isoformat(),
         "roadmap": roadmap.roadmap_data,
     }
+
+
+@router.delete("/{roadmap_id}")
+def delete_roadmap(
+    roadmap_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a specific roadmap by ID."""
+    roadmap = (
+        db.query(Roadmap)
+        .filter(Roadmap.id == roadmap_id, Roadmap.user_id == current_user.id)
+        .first()
+    )
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Roadmap not found")
+    db.delete(roadmap)
+    db.commit()
+    return {"message": "Roadmap deleted successfully"}

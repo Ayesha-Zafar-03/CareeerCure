@@ -96,7 +96,11 @@ export default function RoadmapPage() {
       setPastRoadmaps(updated);
       syncRoadmapTitles(updated);
       if (activeRoadmap?.id === id) setActiveRoadmap(null);
-    } catch {}
+    } catch (err: any) {
+      console.error("Delete roadmap failed:", err);
+      const msg = err.response?.data?.detail || "Failed to delete roadmap. Please try again.";
+      alert(msg);
+    }
   };
 
   const roadmapId = activeRoadmap?.id ?? "draft";
