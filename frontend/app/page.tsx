@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
 import {
   BriefcaseIcon, 
   FileTextIcon, 
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 import LandingHeader from "@/components/LandingHeader";
 import Footer from "@/components/Footer";
-import TypewriterText, { TypewriterSequence } from "@/components/TypewriterText";
 
 const VantaBackground = dynamic(() => import("@/components/VantaBackground"), { ssr: false });
 
@@ -84,15 +82,10 @@ export default function LandingPage() {
         
         <div className="relative">
           <h1 className="text-5xl md:text-6xl font-extrabold text-primary-dark leading-tight mb-6">
-            <TypewriterSequence
-              lines={[
-                "Your AI-Powered",
-                "Career Companion",
-              ]}
-              speed={40}
-              lineDelay={800}
-              className="flex flex-col items-center"
-            />
+            Your AI-Powered<br />
+            <span className="bg-gradient-to-r from-primary via-primary-d to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+              Career Companion
+            </span>
           </h1>
           
           {/* Animated decorative elements */}
@@ -107,12 +100,9 @@ export default function LandingPage() {
           </div>
         </div>
         
-        <TypewriterText
-          text="Upload your CV → Get matched with internships, courses & a personalised roadmap → Land your dream role."
-          speed={25}
-          startDelay={1800}
-          className="text-xl text-ink/50 max-w-2xl mx-auto mb-10 block"
-        />
+        <p className="text-xl text-ink/50 max-w-2xl mx-auto mb-10">
+          Upload your CV → Get matched with internships, courses & a personalised roadmap → Land your dream role.
+        </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '1s'}}>
           <Link
@@ -182,12 +172,7 @@ export default function LandingPage() {
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${f.color} group-hover:scale-110 transition-transform duration-300`}>
                   <f.icon className="w-6 h-6 group-hover:animate-bounce" />
                 </div>
-                <TypewriterText
-                  text={f.title}
-                  speed={30}
-                  startDelay={index * 200}
-                  className="font-semibold text-primary-dark mb-2"
-                />
+                <h3 className="font-semibold text-primary-dark mb-2">{f.title}</h3>
                 <p className="text-sm text-ink/50 leading-relaxed">{f.description}</p>
                 
                 {/* Animated accent */}

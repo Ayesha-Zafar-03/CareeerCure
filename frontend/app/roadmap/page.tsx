@@ -276,9 +276,10 @@ export default function RoadmapPage() {
                   <div className="flex items-center gap-2">
                     {activeRoadmap.id && (
                       <button
-                        onClick={(e) => {
+                        type="button"
+                        onClick={(e: React.MouseEvent) => {
                           e.stopPropagation();
-                          deleteRoadmap(activeRoadmap.id, e as any);
+                          deleteRoadmap(activeRoadmap.id, e);
                         }}
                         className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] uppercase text-ink/40 hover:text-primary transition-colors px-2 py-1"
                       >
